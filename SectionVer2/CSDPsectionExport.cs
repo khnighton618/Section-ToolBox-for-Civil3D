@@ -9,10 +9,13 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows.Forms;
+using DataTable = System.Data.DataTable;
+
 namespace Sections
 {
     public partial class CSDPSectionExport : Form
     {
+        #region Constant and variables
         private StreamReader filereader;
         Editor ed = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Editor;
         Database db = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument.Database;
@@ -40,6 +43,7 @@ namespace Sections
         double Area;
         string sLayerName1 = "PolyEG";
         string sLayerName2 = "PolyFG";
+        string sLayerName3 = "PolySUB";
         SelectionSet selSet;
         TypedValue[] tv = new TypedValue[] { new TypedValue((int)DxfCode.Start, "*POLY*") };
         TypedValue[] tvline = new TypedValue[] { new TypedValue((int)DxfCode.Start, "LINE") };
@@ -59,7 +63,10 @@ namespace Sections
         double datX = 5;
         double MtextDatum;
         string datumTex;
+        public string StaErrorList = "";
         Stopwatch elaptime = new Stopwatch();
+        #endregion
+
         public void SaveFiles(List<string> inputTXTEG, List<string> inputTXTFG, string otherfiles)
         {
             string filename;
@@ -124,6 +131,7 @@ namespace Sections
             //System.Diagnostics.Process.Start(f1);
             //System.Diagnostics.Process.Start(f2);
         }
+
         public void ErrorDebugger(int indexDat, int indexst, int indexscale, int indexblock, int indexpl,
             int GlobalIndex1, double sta)
         {
@@ -156,6 +164,7 @@ namespace Sections
 
             //ErrorNO.Text = "Number of Error: " + v.ToString();
         }
+
         public void createPolyLine(TypedValue[] fltPol, Point2dCollection po2dcol)
         {
             using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -175,22 +184,23 @@ namespace Sections
                     pol2d.Closed = false;
                     if ((int)fltPol[1].Value == indexG)
                         pol2d.Layer = sLayerName1;
-                    else
+                    else if ((int)fltPol[1].Value == indexR)
                         pol2d.Layer = sLayerName2;
+                    else
+                        pol2d.Layer = sLayerName3;
 
                     pol2d.ColorIndex = (int)fltPol[1].Value;
                     btr.AppendEntity(pol2d);
                     tr.AddNewlyCreatedDBObject(pol2d, true);
                     tr.Commit();
-
-
                 }
                 catch (Autodesk.AutoCAD.Runtime.Exception ex)
                 {
                     Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(ex.StackTrace);
                 }
             }
-        }
+        }        
+
         public void CreateFiles()
         {
             TypedValue[] fltGreenPol = { new TypedValue(0, "*POLY*"), new TypedValue((int)DxfCode.Color, indexG) };
@@ -240,6 +250,20 @@ namespace Sections
                             tr.AddNewlyCreatedDBObject(acLyrTblRec, true);
                         }
                     }
+                    if (acLyrTbl.Has(sLayerName3) == false)
+                    {
+                        using (LayerTableRecord acLyrTblRec = new LayerTableRecord())
+                        {
+                            // Assign the layer the ACI color 3 and a name
+                            //acLyrTblRec.Color = Color.FromColorIndex(ColorMethod.ByAci, 3);
+                            acLyrTblRec.Name = sLayerName3;
+                            // Upgrade the Layer table for write
+                            acLyrTbl.UpgradeOpen();
+                            // Append the new layer to the Layer table and the transaction
+                            acLyrTbl.Add(acLyrTblRec);
+                            tr.AddNewlyCreatedDBObject(acLyrTblRec, true);
+                        }
+                    }
                     #endregion
                     #region initial values
                     List<double> stalist = new List<double>();
@@ -253,8 +277,7 @@ namespace Sections
                     int linID = 0;
                     double sta = 0;
                     int progbarID = 0;
-                    //RTXTBox.Clear();
-                    //EGExportTXT.Clear();
+                    
                     System.Data.DataTable tbG = new System.Data.DataTable();
                     tbG.Columns.Add("STA", typeof(double));
                     tbG.Columns.Add("OFF", typeof(double));
@@ -268,24 +291,19 @@ namespace Sections
                     tbsub.Columns.Add("STA", typeof(double));
                     tbsub.Columns.Add("OFF", typeof(double));
                     tbsub.Columns.Add("H", typeof(double));
-
-                    ObjectId[] ids = selSet.GetObjectIds();
-                    //progressBar1.Maximum = ids.Count();
+                    ObjectId[] ids = selSet.GetObjectIds();                    
                     ProgBar.Maximum = ids.Count();
-                    ProgBar.Step = 1;// / ids.Count();
+                    ProgBar.Step = 1;
                     ProgBar.Value = 0;
                     #endregion
                     foreach (ObjectId entId in ids)
                     {
                         progbarID++;
-                        ProgBar.Value = progbarID;// / ids.Count() * 1000;
-                        //Percentlbl.Text = ProgBar.Value.ToString();
-                        //Percentlbl.Text = Math.Floor(Convert.ToDouble(progbarID / ProgBar.Maximum)*100).ToString() + "%";
-
+                        ProgBar.Value = progbarID;
                         Autodesk.AutoCAD.DatabaseServices.Polyline poly = tr.GetObject(entId, OpenMode.ForRead) as Autodesk.AutoCAD.DatabaseServices.Polyline;
                         if (poly != null && Math.Abs(poly.Area - Area) <= 0.001)
                         {
-                            
+                            #region Constant and variables
                             percentLbl.Text = "Sec: "+progbarID.ToString();
                             maxpolyX = poly.Bounds.Value.MaxPoint.X;
                             maxpolyY = poly.Bounds.Value.MaxPoint.Y;
@@ -320,6 +338,9 @@ namespace Sections
                             liny.Sort();
                             Point2dCollection po2dcol1 = new Point2dCollection();
                             Point2dCollection po2dcolsub = new Point2dCollection();
+                            #endregion
+
+                            #region If has one horizontal line
                             if (linID == 1)
                             {
                                 //--- زمین طبیعی----
@@ -331,7 +352,7 @@ namespace Sections
                                 createPolyLine(fltGreenPol, po2dcol1);
                                 po2dcol1.Clear();
                                 po2dcolsub.Clear();
-                                stalist.Add(sta);
+                                stalist.Add(sta);                     
                                 DataView dv1R = null;
                                 if (chkEGFGOnly.Checked == false)
                                 {
@@ -341,9 +362,10 @@ namespace Sections
                                         , ref indexDat, ref indexst, ref indexscale, ref indexblock, ref indexpl, ref dvSub, ref po2dcolsub);
                                     ErrorDebugger(indexDat, indexst, indexscale, indexblock, indexpl, GlobalIndex, sta);
                                     createPolyLine(fltRedPol, po2dcol1);
-                                    createPolyLine(fltsub, po2dcolsub);
+                                    if (chkSub.Checked == true)
+                                        createPolyLine(fltsub, po2dcolsub);
                                     po2dcol1.Clear();
-                                    po2dcolsub.Clear();
+                                    po2dcolsub.Clear();                                    
                                 }
                                     
                                 //---------------------
@@ -353,28 +375,33 @@ namespace Sections
                                     {
                                         for (int k = 0; k < dv1R.Count; k++)
                                         {
-                                            tbR.Rows.Add(sta, dv1R[k][0], dv1R[k][1]);
+                                            tbR.Rows.Add(sta, dv1R[k][6], dv1R[k][7]);
                                         }
                                         if (chkSub.Checked == true)
                                         {
                                             for (int k = 0; k < dvSub.Count; k++)
                                             {
-                                                tbsub.Rows.Add(sta, dvSub[k][0], dvSub[k][1]);
+                                                tbsub.Rows.Add(sta, dvSub[k][6], dvSub[k][7]);
                                             }
                                         }
                                     }
                                     for (int j = 0; j < dv1G.Count; j++)
                                     {
-                                        tbG.Rows.Add(sta, dv1G[j][0], dv1G[j][1]);
+                                        tbG.Rows.Add(sta, dv1G[j][6], dv1G[j][7]);
                                     }
                                 }
                             }
+                            #endregion
+
+                            #region If has zero horizontal line
                             else if (linID == 0 && linIndex == 0)
                             {
                                 MessageBox.Show("You must edit Sheet Bottom line or run overkill command \n or add line at the bottom of each sheets", "SheetBottomLine Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                 linIndex = 1;
                             }
+                            #endregion
 
+                            #region If has more than one horizontal lines
                             else
                             {
                                 for (int i = 0; i < liny.Count; i++)
@@ -401,7 +428,7 @@ namespace Sections
                                     createPolyLine(fltGreenPol, po2dcol1);
                                     po2dcol1.Clear();
                                     po2dcolsub.Clear();
-                                    stalist.Add(sta);
+                                    stalist.Add(sta);                                    
                                     //---سطح نهایی----
                                     DataView dv1R = null;
                                     if (chkEGFGOnly.Checked == false)
@@ -410,9 +437,10 @@ namespace Sections
                                         , ref indexDat, ref indexst, ref indexscale, ref indexblock, ref indexpl, ref dvSub, ref po2dcolsub);
                                         ErrorDebugger(indexDat, indexst, indexscale, indexblock, indexpl, GlobalIndex, sta);
                                         createPolyLine(fltRedPol, po2dcol1);
-                                        createPolyLine(fltsub, po2dcolsub);
+                                        if (chkSub.Checked == true)
+                                            createPolyLine(fltsub, po2dcolsub);
                                         po2dcol1.Clear();
-                                        po2dcolsub.Clear();
+                                        po2dcolsub.Clear();                                        
                                     }
                                     //---------------------
                                     if (stalist.IndexOf(sta) == stalist.LastIndexOf(sta))
@@ -421,28 +449,28 @@ namespace Sections
                                         {
                                             for (int k = 0; k < dv1R.Count; k++)
                                             {
-                                                tbR.Rows.Add(sta, dv1R[k][0], dv1R[k][1]);
+                                                tbR.Rows.Add(sta, dv1R[k][6], dv1R[k][7]);
                                             }
                                             if (chkSub.Checked == true)
                                             {
                                                 for (int k = 0; k < dvSub.Count; k++)
                                                 {
-                                                    tbsub.Rows.Add(sta, dvSub[k][0], dvSub[k][1]);
+                                                    tbsub.Rows.Add(sta, dvSub[k][6], dvSub[k][7]);
                                                 }
                                             }
                                         }
                                         for (int j = 0; j < dv1G.Count; j++)
                                         {
-                                            tbG.Rows.Add(sta, dv1G[j][0], dv1G[j][1]);
+                                            tbG.Rows.Add(sta, dv1G[j][6], dv1G[j][7]);
                                         }
                                     }
                                 }
                             }
-
+                            #endregion
                         }
                     }
-
-                    DataView dv3 = new DataView(tbG);
+                    #region Create data for Text Files
+                    DataView dv3 = delDupFinal(new DataView(tbG));// new DataView(tbG);
                     dv3.Sort = "STA ASC";
                     for (int i = 0; i < dv3.Count; i++)
                     {
@@ -465,7 +493,7 @@ namespace Sections
                     }
                     if (chkEGFGOnly.Checked == false)
                     {
-                        DataView dv4 = new DataView(tbR);
+                        DataView dv4 = delDupFinal(new DataView(tbR));// new DataView(tbR);
                         dv4.Sort = "STA ASC";
                         
                         for (int i = 0; i < dv4.Count; i++)
@@ -489,7 +517,7 @@ namespace Sections
                         }
                         if (chkSub.Checked == true)
                         {
-                            DataView dv5 = new DataView(tbsub);
+                            DataView dv5 = delDupFinal(new DataView(tbsub)); //new DataView(tbsub);
                             dv5.Sort = "STA ASC";
                             for (int i = 0; i < dv5.Count; i++)
                             {
@@ -515,27 +543,317 @@ namespace Sections
 
                     checkBoxFile.Enabled = true;
                     checkBoxFile.CheckState = CheckState.Checked;
+                    #endregion
                 }
                 catch (System.Exception ex)
                 {
                     ed.WriteMessage("\n" + ex.ToString());
                     Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(ex.StackTrace);
+                    TXTStaErrorList.Text = ex.StackTrace;
                 }
                 tr.Commit();
             }
 
             if (STRError != null)
-                MessageBox.Show(STRError, "Error List", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            {
+                TXTStaErrorList.Text = StaErrorList;
+               // MessageBox.Show(STRError, "Error List", MessageBoxButtons.OK, MessageBoxIcon.Error); 
+            }
         }
+
         public CSDPSectionExport()
         {
             InitializeComponent();
         }
+
+        public System.Data.DataTable duplicateRemoval(DataTable dt, int ComparisonFieldIndex)
+        {
+            try
+            {
+                //Build the new datatable that will be returned
+                DataTable dtReturn = new DataTable();
+                for (int i = 0; i < dt.Columns.Count; i++)
+                {
+                    dtReturn.Columns.Add(dt.Columns[i].ColumnName, System.Type.GetType("System.String"));
+                }
+
+                //Loop through each record in the datatable we have been passed
+                foreach (DataRow dr in dt.Rows)
+                {
+                    bool Found = false;
+                    //Loop through each record already present in the datatable being returned
+                    foreach (DataRow dr2 in dtReturn.Rows)
+                    {
+                        bool Identical = true;
+                        //Compare the column specified to see if it matches an existing record
+                        if (!(dr2[ComparisonFieldIndex].ToString() == dr[ComparisonFieldIndex].ToString()))
+                        {
+                            Identical = false;
+                        }
+                        //If the record found identically matches one we already have, don't add it again
+                        if (Identical)
+                        {
+                            Found = true;
+                            break;
+                        }
+                    }
+                    //If we didn't find a matching record, we'll add this one
+                    if (!Found)
+                    {
+                        DataRow drAdd = dtReturn.NewRow();
+                        for (int i = 0; i < dtReturn.Columns.Count; i++)
+                        {
+                            drAdd[i] = dr[i];
+                        }
+
+                        dtReturn.Rows.Add(drAdd);
+                    }
+                }
+                return dtReturn;
+            }
+            catch (Exception)
+            {
+                //Return the original datatable if something failed above
+                return dt;
+            }
+        }
+
+        public void polydiag(ObjectId[] ids4, TypedValue[] fltPol, double aveX, double scale, double Datum, double blPosY, 
+            ref Point2dCollection po2dcol, ref DataView dvfg, ref DataView dvSub, double minpolyY, double maxpolyY)
+        {
+            po2dcol = new Point2dCollection();
+            double x = 0;
+            double y = 0;
+            List<Polyline> listPolyFG = new List<Polyline>();
+            List<Polyline> listPolySub = new List<Polyline>();            
+            dvfg = null;
+            dvSub = null;
+            string type = "";
+            bool deleteNearest = false;
+            if (chkReduce.Checked == true)
+                deleteNearest = true;
+            System.Data.DataTable tb = new System.Data.DataTable();
+            tb.Columns.Add("Length", typeof(double));
+            tb.Columns.Add("ObjectID", typeof(ObjectId));
+            tb.Columns.Add("XStart", typeof(double));
+            tb.Columns.Add("YStart", typeof(double));
+            tb.Columns.Add("Type", typeof(string));
+            tb.Columns.Add("Line", typeof(string));
+            tb.Columns.Add("x", typeof(double));
+            tb.Columns.Add("y", typeof(double));
+            tb.Columns.Add("xdwg", typeof(double));
+            tb.Columns.Add("ydwg", typeof(double));
+
+            System.Data.DataTable tbs = new System.Data.DataTable();
+            tbs.Columns.Add("Length", typeof(double));
+            tbs.Columns.Add("ObjectID", typeof(ObjectId));
+            tbs.Columns.Add("XStart", typeof(double));
+            tbs.Columns.Add("YStart", typeof(double));
+            tbs.Columns.Add("Type", typeof(string));
+            tbs.Columns.Add("Line", typeof(string));
+            tbs.Columns.Add("x", typeof(double));
+            tbs.Columns.Add("y", typeof(double));
+            tbs.Columns.Add("xdwg", typeof(double));
+            tbs.Columns.Add("ydwg", typeof(double));
+
+
+            System.Data.DataTable tbf = new System.Data.DataTable();
+            tbf.Columns.Add("Length", typeof(double));
+            tbf.Columns.Add("ObjectID", typeof(ObjectId));
+            tbf.Columns.Add("XStart", typeof(double));
+            tbf.Columns.Add("YStart", typeof(double));
+            tbf.Columns.Add("Type", typeof(string));
+            tbf.Columns.Add("Line", typeof(string));
+            tbf.Columns.Add("x", typeof(double));
+            tbf.Columns.Add("y", typeof(double));
+            tbf.Columns.Add("xdwg", typeof(double));
+            tbf.Columns.Add("ydwg", typeof(double));
+
+            Point2d po2d = new Point2d();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    foreach (ObjectId entId4 in ids4)
+                    {
+                        Autodesk.AutoCAD.DatabaseServices.Polyline poly = tr.GetObject(entId4, OpenMode.ForRead) as Autodesk.AutoCAD.DatabaseServices.Polyline;
+                        if (poly != null && poly.ColorIndex == (int)fltPol[1].Value & poly.StartPoint.Y<maxpolyY & poly.StartPoint.Y> minpolyY
+                            &poly.StartPoint.X<=maxX&poly.StartPoint.X>=minX)
+                        {
+                            if (Math.Abs(poly.StartPoint.X - aveX)>1e-4) type = "Subgrade";
+                            else type = "Asphalt";
+                            for (int i = 0; i < poly.NumberOfVertices; i++)
+                            {
+                                po2d = poly.GetPoint2dAt(i);
+                                x = Math.Round((po2d.X - aveX) / scale, 4);
+                                y = Math.Round((Datum + ((-blPosY + po2d.Y) / scale)), 4);                               
+                                tb.Rows.Add(poly.Length, entId4, poly.StartPoint.X, poly.StartPoint.Y, type, "Polyline", x, y, po2d.X, po2d.Y);                                
+                                indexpl = 1;
+                            }
+                        }              
+                        Line Li = tr.GetObject(entId4, OpenMode.ForRead) as Line;
+                        if (Li != null && Li.ColorIndex == (int)fltPol[1].Value)
+                        {   
+                            x = Math.Round((Li.StartPoint.X - aveX) / scale, 4);
+                            y = Math.Round((Datum + ((-blPosY + Li.StartPoint.Y) / scale)), 4);
+                            tb.Rows.Add(Li.Length, entId4, Math.Abs(Li.StartPoint.X - aveX), Li.StartPoint.Y, "Asphalt", "Line", x, y, Li.StartPoint.X,
+                                Li.StartPoint.Y);                           
+                            x = Math.Round((Li.EndPoint.X - aveX) / scale, 4);
+                            y = Math.Round((Datum + ((-blPosY + Li.EndPoint.Y) / scale)), 4);
+                            tb.Rows.Add(Li.Length, entId4, Math.Abs(Li.StartPoint.X - aveX), Li.StartPoint.Y, "Asphalt", "Line", x, y, Li.EndPoint.X,
+                                Li.EndPoint.Y);
+                        }                            
+                    }                    
+                    DataView dvFG = new DataView(tb);
+                    dvFG.Sort = "XStart DESC";
+                    //if (fltPol[1].Value.ToString() == checkBoxFG.Text.Split(' ')[checkBoxFG.Text.Split(' ').Length - 1]&& chkSub.Checked == true)
+                    //{
+                    //    dvFG.Sort = "XStart DESC";
+                    //    for (int i = 0; i < dvFG.Count; i++)
+                    //    {
+                    //        if (chkMultiple.Checked == true || Math.Abs((double)dvFG[i][2] - aveX) <= 2 * scale)
+                    //        {
+                    //            if (aveX == (double)dvFG[i][2])
+                    //                continue;
+                    //            else
+                    //            {                                    
+                    //                dvFG[i].Row.BeginEdit();                                    
+                    //                dvFG[i][4] = "Subgrade";
+                    //                listPolySub.Add(tr.GetObject((ObjectId)dvFG[i][1], OpenMode.ForRead) as Polyline);
+                    //            }
+                    //        }
+                    //        else
+                    //        {
+                    //            if (i == 0)
+                    //                continue;                                
+                    //            else
+                    //            {
+                    //                dvFG[i].Row.BeginEdit();                                    
+                    //                dvFG[i][4] = "Subgrade";
+                    //            }
+                    //        }
+                    //    }
+                    //}                    
+                    bool isFG = true;
+                    if(fltPol[1].Value.ToString() == checkBoxEG.Text.Split(' ')[checkBoxEG.Text.Split(' ').Length - 1])
+                        isFG = false;                    
+                    if(chkSub.Checked == true & fltPol[1].Value.ToString() == checkBoxFG.Text.Split(' ')[checkBoxFG.Text.Split(' ').Length - 1])
+                    {
+                        for (int i = 0; i < dvFG.Count; i++)
+                        {
+                            if(dvFG[i][4] == "Subgrade")
+                                tbs.Rows.Add(dvFG[i][0], dvFG[i][1], dvFG[i][2], dvFG[i][3], dvFG[i][4], dvFG[i][5], dvFG[i][6], dvFG[i][7], dvFG[i][8],
+                                    dvFG[i][9]);                            
+                        }
+                        dvSub = new DataView(tbs);
+                        if(dvSub.Count!=0)
+                        {
+                            dvSub[0].Row.Delete();
+                            dvSub[dvSub.Count - 1].Row.Delete();
+                            dvSub.Sort = "x ASC";
+                            dvSub = DelDup(dvSub, deleteNearest, scale, false);
+                        }
+                    }
+                    dvFG.Sort = "x ASC";
+                    //dvfg = null;
+                    if(fltPol[1].Value.ToString() == checkBoxFG.Text.Split(' ')[checkBoxFG.Text.Split(' ').Length - 1])
+                    {
+                        for (int i = 0; i < dvFG.Count; i++)
+                        {
+                            if (dvFG[i][4] != "Subgrade")
+                            {
+                                tbf.Rows.Add(dvFG[i][0], dvFG[i][1], dvFG[i][2], dvFG[i][3], dvFG[i][4], dvFG[i][5], dvFG[i][6], dvFG[i][7], dvFG[i][8],
+                                    dvFG[i][9]);
+                            }
+                        }
+                        dvfg = new DataView(tbf);
+                        dvfg = DelDup(dvfg, deleteNearest, scale, true);
+                    }
+                    else
+                        dvfg = DelDup(dvFG, deleteNearest, scale, false);
+                    for (int i = 0; i < dvfg.Count; i++)
+                    {
+                        po2d = new Point2d((double)dvfg[i][8], (double)dvfg[i][9]);
+                        po2dcol.Add(po2d);
+                    }
+                    tr.Commit();                    
+                }
+                catch (Autodesk.AutoCAD.Runtime.Exception ex)
+                {
+                    ed.WriteMessage("\n" + ex.Message);
+                    Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(ex.StackTrace);
+                }
+            }           
+        }
+
+        public DataView delDupFinal(DataView dv)
+        {
+            double difx = 0;
+            double dify = 0;
+            for (int i = 0; i < dv.Count; i++)
+            {               
+
+                if (i == dv.Count - 1)
+                {
+                    difx = (double)dv[i][1] - (double)dv[i - 1][1];
+                    dify = (double)dv[i][2] - (double)dv[i - 1][2];
+                }
+                else
+                {
+                    difx = (double)dv[i + 1][1] - (double)dv[i][1];
+                    dify = (double)dv[i + 1][2] - (double)dv[i][2];
+                }
+                if ((Math.Abs(difx) + Math.Abs(dify)) < 1e-4)
+                    dv[i].Row.Delete();
+            }
+            return dv;
+        }
+
+        public DataView DelDup(DataView dv, bool deleteNearest, double scale, bool isFG)
+        {
+            int v = 0;
+            //------حذف نقاط با فاصله کم از هم---------
+            double difx = 0;
+            double dify = 0;
+            for (int i = 0; i < dv.Count; i++)
+            {
+                //
+
+                if (i == dv.Count - 1)
+                {
+                    difx = (double)dv[i][6] - (double)dv[i - 1][6];
+                    dify = (double)dv[i][7] - (double)dv[i - 1][7];
+                }
+                else
+                {
+                    difx = (double)dv[i + 1][6] - (double)dv[i][6];
+                    dify = (double)dv[i + 1][7] - (double)dv[i][7];
+                }
+                if ((Math.Abs(difx) + Math.Abs(dify)) < 1e-4 )
+                    dv[i].Row.Delete();
+                if ((double)dv[i][6] == 0 & isFG & v == 0)
+                {
+                    //dv[i].Row.Delete();
+                    v++;
+                }
+                if (Math.Abs(difx) * scale <= .01 & Math.Abs(dify) * scale <= .01 & deleteNearest)
+                {
+                    dv[i].Row.Delete();
+                    continue;
+                }
+                if (Math.Abs(difx) * scale <= .01 & Math.Abs(dify) * scale > 1)
+                {
+                    dv[i].Row.Delete();
+                    continue;
+                }
+            }
+            return dv;
+        }        
+
         public void exportTable(double maxpolyX, double maxpolyY, double minpolyX, double minpolyY, TypedValue[] fltPol,
-            ref DataView dv, ref double sta, ref Point2dCollection po2dcol, ref int indexDat, ref int indexst, ref int indexscale
+            ref DataView dvFG, ref double sta, ref Point2dCollection po2dcol, ref int indexDat, ref int indexst, ref int indexscale
             , ref int indexblock, ref int indexpl, ref DataView dvSub, ref Point2dCollection po2dcolsub)
         {
-
             indexDat = 0;
             indexst = 0;
             indexscale = 0;
@@ -573,7 +891,7 @@ namespace Sections
                     int ID = 0;
                     double x = 0;
                     double y = 0;
-                    //----پیدا کردن تکست دیتوم و کیلومتراژ
+                    #region Get KM and Datum
                     PromptSelectionResult polsel;
                     polsel = ed.SelectCrossingWindow(new Point3d(minpolyX, minpolyY, 0), new Point3d(maxpolyX, maxpolyY, 0), new SelectionFilter(tvTEX));
                     if (polsel.Status == PromptStatus.Error) return;
@@ -643,6 +961,8 @@ namespace Sections
                             }
                         }
                     }
+                    #endregion
+                    #region Get Scale
                     //---------مقدار Scale----
                     polsel = ed.SelectCrossingWindow(new Point3d(minX, minY, 0), new Point3d(maxX, maxY, 0), new SelectionFilter(tvTEX));
                     if (polsel.Status == PromptStatus.Error) return;
@@ -664,6 +984,8 @@ namespace Sections
                             break;
                         }
                     }
+                    #endregion
+                    #region Get Y Datum
                     //--------پیدا کردن ایگرگ بلوک دیتوم
                     polsel = ed.SelectCrossingWindow(new Point3d(minpolyX, minpolyY, 0), new Point3d(maxpolyX, maxpolyY, 0),
                     new SelectionFilter(filter));
@@ -673,6 +995,7 @@ namespace Sections
                     foreach (ObjectId entId3 in ids3)
                     {
                         BlockReference bl = tr.GetObject(entId3, OpenMode.ForRead) as BlockReference;
+                         
                         if (bl != null && bl.Position.Y <= maxpolyY && bl.Position.Y >= minpolyY
                             && bl.Position.X <= maxpolyX && bl.Position.X >= minpolyX)
                         {
@@ -682,6 +1005,8 @@ namespace Sections
                             po2dcol.Add(po);
                         }
                     }
+                    #endregion
+                    #region Get Surface Points
                     //-------تشکیل نقاط از پلی لاین
                     double scale = (ScBox / (Hors / Convert.ToDouble(DefaultScale.Text.ToString())));
                     polsel = ed.SelectCrossingWindow(new Point3d(minpolyX, minpolyY, 0), new Point3d(maxpolyX, maxpolyY, 0),
@@ -689,123 +1014,25 @@ namespace Sections
                     if (polsel.Status == PromptStatus.Error) return;
                     SelectionSet PolGreen = polsel.Value;
                     ObjectId[] ids4 = PolGreen.GetObjectIds();
-                    foreach (ObjectId entId4 in ids4)
-                    {
-                        Autodesk.AutoCAD.DatabaseServices.Polyline poly2 = tr.GetObject(entId4, OpenMode.ForRead) as Autodesk.AutoCAD.DatabaseServices.Polyline;
-                        //if(chkSub.Checked==false)                       
-                            if (poly2 != null && Math.Abs(poly2.StartPoint.X - aveX)/ scale > 1 && chkMultiple.Checked == true && chkTrim.Checked == false)
-                                continue;
-                        //Math.Abs(poly2.StartPoint.X - aveX) / scale < 1
-                        if (poly2 != null && poly2.StartPoint.Y >= minpolyY && poly2.StartPoint.Y <= maxpolyY && poly2.Area != Area && poly2.ColorIndex== (int)fltPol[1].Value)
-                        {
-                            Point2d po2d = new Point2d();
-                            for (int i = ID; i < poly2.NumberOfVertices; i++)
-                            {
-                                po2d = poly2.GetPoint2dAt(i);
-                                x = Math.Round((po2d.X - aveX) / scale, 4);
-                                y = Math.Round((Datum + ((-blPosY + po2d.Y) / scale)), 4);
-                                if(fltPol[1].Value== checkBoxFG.Text.Split(' ')[checkBoxFG.Text.Split(' ').Length - 1])
-                                    if (Math.Abs(x) <= 1 && Math.Abs(x) > 0.01 & chkEGFGOnly.Checked==false)//-----حذف نقاط اضافی خطوط زیر سطح نهایی
-                                        continue;
-                                table.Rows.Add(x, y, po2d.X, po2d.Y);
-                                indexpl = 1;
-                            }
-                            ID = 1;
-                        }
-                    }
-
+                    Point2dCollection Pcol = null;
+                    dvSub = null;
+                    dvFG = null;
+                    polydiag(ids4, fltPol, aveX, scale, Datum, blPosY, ref Pcol, ref dvFG, ref dvSub, minpolyY, maxpolyY);
+                    #endregion
+                    #region Get Subgrade Points
                     //-------تشکیل نقاط سابگرید   
-                    if(chkSub.Checked==true&& fltPol[1].Value.ToString() == "1")
-                    {
-                        foreach (ObjectId entId4 in ids4)
-                        {
-                            Autodesk.AutoCAD.DatabaseServices.Polyline poly2 = tr.GetObject(entId4, OpenMode.ForRead) as Autodesk.AutoCAD.DatabaseServices.Polyline;
-                            if (poly2 != null && poly2.StartPoint.Y >= minpolyY && poly2.StartPoint.Y <= maxpolyY && poly2.Area != Area && Math.Abs(poly2.StartPoint.X - aveX) > 0)
-                            {
-                                Point2d po2d = new Point2d();
-                                for (int i = 0; i < poly2.NumberOfVertices; i++)
-                                {
-                                    po2d = poly2.GetPoint2dAt(i);
-                                    x = Math.Round((po2d.X - aveX) / (ScBox / (Hors / Convert.ToDouble(DefaultScale.Text.ToString()))), 4);
-                                    y = Math.Round((Datum + ((-blPosY + po2d.Y) / (ScBox / (Verts / Convert.ToDouble(DefaultScale.Text.ToString()))))), 4);
-                                    tb2.Rows.Add(x, y, po2d.X, po2d.Y);
-                                    indexpl = 1;
-                                }
-                            }
-                        }
-                        dvSub = new DataView(tb2);                        
-                        if(dvSub.Count==0)
-                        {
-                            MessageBox.Show("In station : "+ sta.ToString()+" there is no subgrade line!");
-                        }
-                        else
-                        {
-                            double x1;
-                            double x2;
-                            double y1;
-                            double y2;
-                            for (int i = 0; i < po2dcol.Count; i++)
-                            {
-                                Point2d po = new Point2d(po2dcol[i].X, po2dcol[i].Y);
-                                po2dcolsub.Add(po);
-                            }
-                            int ID2 = 0;
-                            x1 = (double)dvSub[0][2];
-                            x2 = (double)dvSub[1][2];
-                            if (x1 > x2)
-                            {
-                                dvSub[0].Row.Delete();
-                                //ID = 1;
-                            }
-                            ID = 0;
-                            x1 = (double)dvSub[dvSub.Count - 1][2];
-                            x2 = (double)dvSub[dvSub.Count - 2][2];
-                            if (x1 < x2)
-                            {
-                                dvSub[dvSub.Count - 1].Row.Delete();
-                                //ID2 = 1;
-                            }
-                            for (int i = 0; i < dvSub.Count; i++)
-                            {                                               
-                                Point2d po = new Point2d((double)dvSub[i][2], (double)dvSub[i][3]);
-                                po2dcolsub.Add(po);
-                            }
+                    po2dcolsub.AddRange(po2dcol.ToArray());
+                    if (chkSub.Checked==true&& fltPol[1].Value.ToString() == "1")
+                    {                        
+                        for (int i = 0; i < dvSub.Count; i++)
+                        {                        
+                                Point2d po = new Point2d((double)dvSub[i][8], (double)dvSub[i][9]);
+                                po2dcolsub.Add(po);                          
                         }                        
                     }
-                    dv = new DataView(table);
-                    dv.Sort = "OFF ASC";
-                    if(dvSub != null)
-                        dvSub.Sort = "OFF ASC";
-                    //------حذف نقاط با فاصله کم از هم---------                    
-                    double difx = 0;
-                    double dify = 0;
-                    if (dv.Count > 2)
-                    {
-                        for (int i = 0; i < dv.Count; i++)
-                        {
-                            Point2d po = new Point2d((double)dv[i][2], (double)dv[i][3]);
+                    #endregion 
+                    po2dcol.AddRange(Pcol.ToArray());
 
-                            if (i == dv.Count - 1)
-                            {
-                                difx = Convert.ToDouble(dv[i][0].ToString()) - Convert.ToDouble(dv[i - 1][0].ToString());
-                                dify = Convert.ToDouble(dv[i][1].ToString()) - Convert.ToDouble(dv[i - 1][1].ToString());
-                            }
-                            else
-                            {
-                                difx = Convert.ToDouble(dv[i + 1][0].ToString()) - Convert.ToDouble(dv[i][0].ToString());
-                                dify = Convert.ToDouble(dv[i + 1][1].ToString()) - Convert.ToDouble(dv[i][1].ToString());
-                            }
-
-                            if (Math.Abs(difx) * ScBox <= .01 & Math.Abs(dify) * ScBox <= .01 & chkReduce.Checked == true)
-                            {
-                                dv[i].Row.Delete();
-                                continue;
-                            }
-                            //dvlist.Add(dv[i][0].ToString()); 
-                            po2dcol.Add(po);
-                        }
-                    }                   
-                    
                 }
                 catch (Autodesk.AutoCAD.Runtime.Exception ex)
                 {
@@ -826,6 +1053,7 @@ namespace Sections
             else
                 SaveFiles(sbG, null, "EG-FG");
         }
+
         private void saveGenericFormatToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (chkEGFGOnly.Checked == false)
@@ -838,6 +1066,7 @@ namespace Sections
                 SaveFiles(exEG, null, "EG-FG");
             
         }
+
         private void PolyBTN_Click(object sender, EventArgs e)
         {
             //checkBoxObject.Text = "";
@@ -869,7 +1098,10 @@ namespace Sections
                             checkBoxFile.CheckState = CheckState.Unchecked;
                         }
                         else
+                        {
                             MessageBox.Show("Please select only Polyline not 2Dpolyline or 3Dpolyline or Line...", "Selection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            System.Exception ex = new System.Exception("Please select only Polyline not 2Dpolyline or 3Dpolyline or Line...");
+                        }
                     }
                     //select on screen                    
                     PromptSelectionResult selRes = ed.GetSelection(new SelectionFilter(tv));
@@ -881,10 +1113,12 @@ namespace Sections
                 {
                     ed.WriteMessage("\n" + ex.ToString());
                     Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(ex.StackTrace);
+                    TXTStaErrorList.Text = ex.StackTrace;
                 }
                 tr.Commit();
             }
         }
+
         private void EGBTN_Click(object sender, EventArgs e)
         {
             //checkBoxEG.Text = "";
@@ -910,7 +1144,11 @@ namespace Sections
                             checkBoxEG.Text = "EG Selected : Color is " + indexG.ToString();
                         }
                         else
+                        {
                             MessageBox.Show("Please select only Polyline not 2Dpolyline or 3Dpolyline or Line...", "Selection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            System.Exception ex = new System.Exception("Please select only Polyline not 2Dpolyline or 3Dpolyline or Line...");
+                        }
+                            
                     }
 
                 }
@@ -918,12 +1156,14 @@ namespace Sections
                 {
                     ed.WriteMessage("\n" + ex.ToString());
                     Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(ex.StackTrace);
+                    TXTStaErrorList.Text = ex.StackTrace;
                 }
                 tr.Commit();
 
             }
 
         }
+
         private void FGBTN_Click(object sender, EventArgs e)
         {
             //checkBoxFG.Text = "";
@@ -948,7 +1188,10 @@ namespace Sections
                             checkBoxFG.Text = "FG Selected : Color is " + indexR.ToString();
                         }
                         else
+                        {
                             MessageBox.Show("Please select only Polyline not 2Dpolyline or 3Dpolyline or Line...", "Selection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            System.Exception ex = new System.Exception("Please select only Polyline not 2Dpolyline or 3Dpolyline or Line...");
+                        }
                     }
 
                 }
@@ -956,21 +1199,25 @@ namespace Sections
                 {
                     ed.WriteMessage("\n" + ex.ToString());
                     Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(ex.StackTrace);
+                    TXTStaErrorList.Text = ex.StackTrace;
                 }
                 tr.Commit();
 
             }
 
         }
+
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             this.Close();
         }
+
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Sections.AboutBoxCSDPExport win1 = new Sections.AboutBoxCSDPExport();
             Autodesk.AutoCAD.ApplicationServices.Application.ShowModelessDialog(win1);
         }
+
         private void SelKMBTN_Click(object sender, EventArgs e)
         {
             //CHKBXKM.Text = "";
@@ -1015,10 +1262,12 @@ namespace Sections
                 {
                     ed.WriteMessage("\n" + ex.ToString());
                     Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(ex.StackTrace);
+                    TXTStaErrorList.Text = ex.StackTrace;
                 }
                 tr.Commit();
             }
         }
+
         private void datBTN_Click(object sender, EventArgs e)
         {
             //checkBoxDat.Text = "";
@@ -1047,10 +1296,12 @@ namespace Sections
                 {
                     ed.WriteMessage("\n" + ex.ToString());
                     Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(ex.StackTrace);
+                    TXTStaErrorList.Text = ex.StackTrace;
                 }
                 tr.Commit();
             }
         }
+
         private void saveSelectionToAFileToolStripMenuItem_Click(object sender, EventArgs e)
         {
             List<string> st = new List<string>();
@@ -1076,6 +1327,7 @@ namespace Sections
             st.Add(chkSub.Checked.ToString());
             SaveFiles(st, null, "Selection");           
         }
+
         private void openSelectionFileToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
@@ -1144,13 +1396,16 @@ namespace Sections
             catch (System.Exception ex)
             {
                 ed.WriteMessage(ex.Message);
+                TXTStaErrorList.Text = ex.StackTrace;
             }
 
         }
+
         private void toolStripStatusLabel1_Click(object sender, EventArgs e)
         {
 
         }
+
         private void CreateBTN_Click(object sender, EventArgs e)
         {
             elaptime.Start();
@@ -1158,14 +1413,18 @@ namespace Sections
             ProgBar.Value = 0;
             percentLbl.Text = "Sec: 0";
             ErrorNOStripStatus.Text = "Errors: 0";
-            //Percentlbl.Text = "0%";            
+            //Percentlbl.Text = "0%";
+            TXTStaErrorList.Text = "";
+            StaErrorList = "";
             CreateFiles();
             elaptime.Stop();
             TimeElapseStripStatus.Text = "Elapsed Time: " + elaptime.Elapsed.ToString().Remove(8);//.Hours+":"+elaptime.Elapsed.Minutes+":"+elaptime.Elapsed.Seconds;
             ErrorNOStripStatus.Text = "Errors: " + NOErr.ToString();
-            elaptime.Reset();
+            elaptime.Reset();            
+            
 
         }
+
         private void CheckBox4_CheckedChanged(object sender, EventArgs e)
         {
             if(chkEGFGOnly.Checked==true)
@@ -1178,6 +1437,7 @@ namespace Sections
                 FGBTN.Enabled = true;
             }
         }
+
         private void button1_Click (object sender, EventArgs e)
         {
             Sections.CreateSectionFromFile win = new Sections.CreateSectionFromFile();

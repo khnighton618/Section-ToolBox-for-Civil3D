@@ -58,6 +58,8 @@
             this.datBTN = new System.Windows.Forms.Button();
             this.checkBoxDat = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.TXTStaErrorList = new System.Windows.Forms.TextBox();
+            this.label8 = new System.Windows.Forms.Label();
             this.BTN_Create_Sections = new System.Windows.Forms.Button();
             this.chkSub = new System.Windows.Forms.CheckBox();
             this.chkTrim = new System.Windows.Forms.CheckBox();
@@ -339,6 +341,8 @@
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.TXTStaErrorList);
+            this.groupBox1.Controls.Add(this.label8);
             this.groupBox1.Controls.Add(this.BTN_Create_Sections);
             this.groupBox1.Controls.Add(this.chkSub);
             this.groupBox1.Controls.Add(this.chkTrim);
@@ -367,6 +371,23 @@
             this.groupBox1.Size = new System.Drawing.Size(387, 284);
             this.groupBox1.TabIndex = 27;
             this.groupBox1.TabStop = false;
+            // 
+            // TXTStaErrorList
+            // 
+            this.TXTStaErrorList.Location = new System.Drawing.Point(251, 158);
+            this.TXTStaErrorList.Multiline = true;
+            this.TXTStaErrorList.Name = "TXTStaErrorList";
+            this.TXTStaErrorList.Size = new System.Drawing.Size(123, 87);
+            this.TXTStaErrorList.TabIndex = 37;
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(249, 139);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(87, 13);
+            this.label8.TabIndex = 33;
+            this.label8.Text = "Station Error List:";
             // 
             // BTN_Create_Sections
             // 
@@ -523,7 +544,7 @@
             this.MinimumSize = new System.Drawing.Size(424, 442);
             this.Name = "CSDPSectionExport";
             this.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.Text = "CSDP Sections Export Ver 2.1.9";
+            this.Text = "CSDP Sections Export Ver 2.3.1";
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.groupBox1.ResumeLayout(false);
@@ -580,5 +601,7 @@
         private System.Windows.Forms.CheckBox chkSub;
         private System.Windows.Forms.ToolStripStatusLabel percentLbl;
         private System.Windows.Forms.Button BTN_Create_Sections;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.TextBox TXTStaErrorList;
     }
 }

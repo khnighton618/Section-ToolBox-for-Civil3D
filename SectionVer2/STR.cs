@@ -15,7 +15,6 @@ using Autodesk.AutoCAD.GraphicsInterface;
 using Polyline = Autodesk.AutoCAD.DatabaseServices.Polyline;
 using Excel = Microsoft.Office.Interop.Excel;
 using Microsoft.Office.Interop.Excel;
-
 namespace Sections
 {
     
@@ -34,6 +33,7 @@ namespace Sections
         CivilDocument civildoc = CivilApplication.ActiveDocument;
         Database db = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Database;
         public double ii;
+
         public void CreatePolyLine(int index, Point2dCollection po2dcol1, Point3dCollection interpo,ref Polyline poly,ref Polyline poly2, double cx)
         {
             if(chkDraw.CheckState==CheckState.Checked & po2dcol1.Count != 0)
@@ -187,6 +187,7 @@ namespace Sections
                 Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(ex.StackTrace);
             }            
         }        
+
         private bool IsPointOnPolyline(Polyline pl1, Polyline pl2, Point3d pt, Point2dCollection po3d, double cx)
         {
             bool isOn = false;
@@ -227,12 +228,14 @@ namespace Sections
             }
             return isOn;
         }
+
         public void SlopeLength(ObjectId CorID, int idx, ref double ccl, ref double cfl, ref double cflEG, ref double cclEG)
         {                        
             using (Transaction trans = db.TransactionManager.StartTransaction())
             {
                 try
                 {
+                    #region Variables
                     System.Data.DataTable tb = new System.Data.DataTable();
                     tb.Columns.Add("sta", typeof(double));
                     tb.Columns.Add("cc", typeof(double));
@@ -251,6 +254,8 @@ namespace Sections
                     Subassembly sub = trans.GetObject(civildoc.SubassemblyCollection[0], OpenMode.ForRead) as Subassembly;                    
                     Alignment align = trans.GetObject(cor.Baselines[LS_Align.SelectedIndex].AlignmentId, OpenMode.ForWrite) as Alignment;
                     SampleLineGroup slg = null;
+                    #endregion
+
                     foreach (ObjectId id in align.GetSampleLineGroupIds())
                     {
                         SampleLineGroup slg2 = trans.GetObject(id, OpenMode.ForWrite) as SampleLineGroup;
@@ -268,8 +273,7 @@ namespace Sections
                     ProgBar.Step = 1;
                     ProgBar.Value = 0;
                     foreach (ObjectId osamID in slg.GetSampleLineIds())
-                    {
-                        
+                    {                       
                         progbarID++;
                         ProgBar.Value = progbarID;
                         int index22 = 0;
@@ -317,6 +321,7 @@ namespace Sections
                                 break;
                             }
                         }
+
                         #region Points nd PolyLines Creation
                         //--------------------------نقاط سطح کوریدور--------------------------------------
                         seccor = trans.GetObject(osam.GetSectionIds()[index6], OpenMode.ForWrite) as Autodesk.Civil.DatabaseServices.Section;
@@ -469,8 +474,10 @@ namespace Sections
 
                         }
                         #endregion
+
                         Polyline poly = null;
                         Polyline poly2 = null;
+
                         #region T1-Calculation
                         //------------------------------------------------------------------
                         double CCL = 0;
@@ -601,7 +608,7 @@ namespace Sections
                             {
                                 continue;
                             }
-                            if (zCo > zEG)
+                            if (zCo > zEG & Math.Abs(zCo - zEG) > 1e-5)
                             {
                                 x1 = EGSectionpoint[i].X;
                                 y1 = EGSectionpoint[i].Y;
@@ -663,7 +670,7 @@ namespace Sections
                                     break;
                                 }
                             }
-                            if (zCo < zEG)
+                            if (zCo < zEG & Math.Abs(zCo - zEG) > 1e-5)
                             {
                                 x1 = CorSectionpoint[i].X;
                                 y1 = CorSectionpoint[i].Y;
@@ -716,7 +723,7 @@ namespace Sections
                             else if ( polyT.NumberOfVertices != 0 & polyT2.NumberOfVertices != 0 )
                                 cc = CCL - polyT2.Length - polyT.Length;
                         T = CCL;
-                        cc = CCL - T1;
+                        //cc = CCL - T1;
                         lblstr2 =  secEG.Station.ToString("F3") + "," + Convert.ToString(cc.ToString("F3")) 
                             + "," + Convert.ToString(CFL.ToString("F3")) + "," + Convert.ToString(T.ToString("F3"));
                         lblstr = "CC=" + Convert.ToString(cc.ToString("F3")) + "\nCF=" + Convert.ToString(CFL.ToString("F3")) 
@@ -748,6 +755,7 @@ namespace Sections
                 trans.Commit();
             }
         }        
+
         public STR()
         {
             InitializeComponent();
@@ -788,6 +796,7 @@ namespace Sections
                 trans.Commit();
             }
         }
+
         private void LS_Cor_SelectedIndexChanged(object sender, EventArgs e)
         {        
             LS_SLG.Items.Clear();
@@ -849,6 +858,7 @@ namespace Sections
                 trans.Commit();
             }
         }
+
         private void LS_Align_SelectedIndexChanged(object sender, EventArgs e)
         {
             object selalg = LS_Align.SelectedItem;
@@ -878,10 +888,12 @@ namespace Sections
                 trans.Commit();
             }
         }
+
         private void LS_SLG_SelectedIndexChanged(object sender, EventArgs e)
         {
 
         }
+
         private void BTN_OK_Click(object sender, EventArgs e)
         {
 
@@ -901,10 +913,12 @@ namespace Sections
             elaptime.Reset();
             NOErr = 0;
         }
+
         private void BTN_Cancel_Click(object sender, EventArgs e)
         {
             this.Close();
         }
+
         private void LeftETWWidth_TextChanged(object sender, EventArgs e)
         {
             if (checkBox1.Checked == false)
@@ -914,6 +928,7 @@ namespace Sections
             }
             else RightETWWidth.Text = LeftETWWidth.Text;
         }
+
         private void CheckBox1_CheckedChanged(object sender, EventArgs e)
         {
             if (checkBox1.Checked == false)
@@ -922,69 +937,58 @@ namespace Sections
             }
             else RightETWWidth.Enabled = false;
         }
+
         private void SaveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            double ccl = 0;
-            double cfl = 0;
-            double ccleg = 0;
-            double cfleg = 0;
-            double ccv = 0;
-            double cfv = 0;
-            double tv = 0;
-            STRlength.Clear();
-            STRlength.Add("STA,CC,CF,T,CCA,CFA,TA");
-            STRlength.Add(dv[0][0] + "," + dv[0][1] + "," + dv[0][2] + "," + dv[0][3] + "," + dv[0][4] + "," + dv[0][5] + "," + dv[0][6]);
-
-            for (int i=1 ; i < dv.Count ; i++)
+            if (dv == null)
+                MessageBox.Show("First, You should calculate CC,CF,T", "Calculation Error");
+            else
             {
-                ccv = ccv + ((double)dv[i][0] - (double)dv[i - 1][0]) / 2 * ((double)dv[i][1] + (double)dv[i - 1][1]);
-                cfv = cfv + ((double)dv[i][0] - (double)dv[i - 1][0]) / 2 * ((double)dv[i][2] + (double)dv[i - 1][2]);
-                tv = tv + ((double)dv[i][0] - (double)dv[i - 1][0]) / 2 * ((double)dv[i][3] + (double)dv[i - 1][3]);
-                dv[i].Row.BeginEdit();
-                dv[i][4] = ccv;
-                dv[i][5] = cfv;
-                dv[i][6] = tv;
-                STRlength.Add(dv[i][0] + "," + dv[i][1] + "," + dv[i][2] + "," + dv[i][3] + "," + dv[i][4] + "," + dv[i][5] + "," + dv[i][6]);
-            }
-            //SlopeLength(corid,1, ref ccl, ref cfl, ref ccleg, ref cfleg);
-            string filename;
-            DialogResult result = new DialogResult();
-            using (SaveFileDialog filechooser = new SaveFileDialog())
-            {
-                filechooser.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
-                filechooser.FilterIndex = 1;
-                result = filechooser.ShowDialog();
-                filename = filechooser.FileName;
-            }
-            if (result == DialogResult.OK)
-            {
-                try
+                STRlength = SaveText();
+                //SlopeLength(corid,1, ref ccl, ref cfl, ref ccleg, ref cfleg);
+                string filename;
+                DialogResult result = new DialogResult();
+                using (SaveFileDialog filechooser = new SaveFileDialog())
                 {
-                    FileStream input = new FileStream(filename, FileMode.OpenOrCreate, FileAccess.Write);
-                    filewriter = new StreamWriter(input);
-                    for (int i = 0; i < STRlength.Count; i++)
+                    filechooser.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+                    filechooser.FilterIndex = 1;
+                    result = filechooser.ShowDialog();
+                    filename = filechooser.FileName;
+                }
+                if (result == DialogResult.OK)
+                {
+                    try
                     {
-                        filewriter.WriteLine(STRlength[i]);
+                        FileStream input = new FileStream(filename, FileMode.OpenOrCreate, FileAccess.Write);
+                        filewriter = new StreamWriter(input);
+                        for (int i = 0; i < STRlength.Count; i++)
+                        {
+                            filewriter.WriteLine(STRlength[i]);
+                        }
+                        filewriter.Close();
                     }
-                    filewriter.Close();
-                }
 
-                catch (IOException)
-                {
-                    NOErr++;
-                    MessageBox.Show("Error writing to file", "File error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    catch (IOException)
+                    {
+                        NOErr++;
+                        MessageBox.Show("Error writing to file", "File error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
             }
+            
         }
+
         private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             this.Close();
         }
+
         private void AboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Sections.About_Stripping_Length win1 = new About_Stripping_Length();
             Autodesk.AutoCAD.ApplicationServices.Application.ShowModelessDialog(win1);
         }
+
         private void ListBox_Codes_SelectedIndexChanged(object sender, EventArgs e)
         {
             using (Transaction trans = db.TransactionManager.StartTransaction())
@@ -1027,7 +1031,76 @@ namespace Sections
             //        wr = offbase;
             //}
         }
+
         private void saveAsXLSToolStripMenuItem_Click (object sender, EventArgs e)
+        {
+            if (dv == null)
+                MessageBox.Show("First, You should calculate CC,CF,T", "Calculation Error");
+            else
+            {
+                STRlength = SaveText();
+                Excel.Application xlApp = new Microsoft.Office.Interop.Excel.Application();
+                if (xlApp == null)
+                {
+                    MessageBox.Show("Excel is not properly installed!!");
+                    return;
+                }
+                Excel.Workbook xlWorkBook;
+                Excel.Worksheet xlWorkSheet;
+                object misValue = System.Reflection.Missing.Value;
+                xlWorkBook = xlApp.Workbooks.Add(misValue);
+                xlWorkSheet = (Excel.Worksheet)xlWorkBook.Worksheets.get_Item(1);
+                int s = 1;
+                for (int i = 0; i < STRlength.Count; i++)
+                {
+                    xlWorkSheet.Cells[i + 1, 1] = STRlength[i].Split(',')[0];
+                    xlWorkSheet.Cells[i + 1, 2] = STRlength[i].Split(',')[1];
+                    xlWorkSheet.Cells[i + 1, 3] = STRlength[i].Split(',')[2];
+                    xlWorkSheet.Cells[i + 1, 4] = STRlength[i].Split(',')[3];
+                    xlWorkSheet.Cells[i + 1, 5] = STRlength[i].Split(',')[4];
+                    xlWorkSheet.Cells[i + 1, 6] = STRlength[i].Split(',')[5];
+                    xlWorkSheet.Cells[i + 1, 7] = STRlength[i].Split(',')[6];
+                    
+                }
+                
+
+                string filename;
+                DialogResult result = new DialogResult();
+                using (SaveFileDialog filechooser = new SaveFileDialog())
+                {
+                    filechooser.Filter = "Text files (*.xls)|*.xls|All files (*.*)|*.*";
+                    filechooser.FilterIndex = 1;
+                    result = filechooser.ShowDialog();
+                    filename = filechooser.FileName;
+                }
+                if (result == DialogResult.OK)
+                {
+                    try
+                    {                                            
+                        xlWorkBook.SaveAs(filename, Excel.XlFileFormat.xlWorkbookNormal, misValue, misValue, misValue, misValue, Excel.XlSaveAsAccessMode.xlExclusive, misValue, misValue, misValue, misValue, misValue);
+                        xlWorkBook.Close(true, misValue, misValue);
+                        xlApp.Quit();
+                    }
+
+                    catch (IOException)
+                    {
+                        NOErr++;
+                        MessageBox.Show("Error writing to file", "File error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+
+
+
+                
+               
+                //MessageBox.Show("Excel file created , you can find the file d:\\csharp-Excel.xls");
+
+            }
+
+
+        }
+
+        public List<string> SaveText()
         {
             double ccl = 0;
             double cfl = 0;
@@ -1036,11 +1109,11 @@ namespace Sections
             double ccv = 0;
             double cfv = 0;
             double tv = 0;
-            STRlength.Clear();
-            STRlength.Add("STA,CC,CF,T,CCA,CFA,TA");
-            STRlength.Add(dv[0][0] + "," + dv[0][1] + "," + dv[0][2] + "," + dv[0][3] + "," + dv[0][4] + "," + dv[0][5] + "," + dv[0][6]);
+            List<string> text = new List<string>();            
+            text.Add("STA,CC,CF,T,CCA,CFA,TA");
+            text.Add(dv[0][0] + "," + dv[0][1] + "," + dv[0][2] + "," + dv[0][3] + "," + dv[0][4] + "," + dv[0][5] + "," + dv[0][6]);
 
-            for (int i=1 ; i < dv.Count ; i++)
+            for (int i = 1; i < dv.Count; i++)
             {
                 ccv = ccv + ((double)dv[i][0] - (double)dv[i - 1][0]) / 2 * ((double)dv[i][1] + (double)dv[i - 1][1]);
                 cfv = cfv + ((double)dv[i][0] - (double)dv[i - 1][0]) / 2 * ((double)dv[i][2] + (double)dv[i - 1][2]);
@@ -1049,13 +1122,38 @@ namespace Sections
                 dv[i][4] = ccv;
                 dv[i][5] = cfv;
                 dv[i][6] = tv;
-                STRlength.Add(dv[i][0] + "," + dv[i][1] + "," + dv[i][2] + "," + dv[i][3] + "," + dv[i][4] + "," + dv[i][5] + "," + dv[i][6]);
+                text.Add(dv[i][0] + "," + dv[i][1] + "," + dv[i][2] + "," + dv[i][3] + "," + dv[i][4] + "," + dv[i][5] + "," + dv[i][6]);
             }
-            
-            
-
-
-
+            return text;
         }
+
+        private void ClearBTN_Click(object sender, EventArgs e)
+        {
+            using (Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                SampleLineGroup slg = null;
+                foreach (ObjectId id in align.GetSampleLineGroupIds())
+                {
+                    SampleLineGroup slg2 = trans.GetObject(id, OpenMode.ForWrite) as SampleLineGroup;
+                    if (LS_SLG.SelectedItem.ToString() == slg2.Name)
+                    {
+                        slg = slg2;
+                        break;
+                    }
+                }
+                foreach (ObjectId osamID in slg.GetSampleLineIds())
+                {
+                    SampleLine osam = trans.GetObject(osamID, OpenMode.ForWrite) as SampleLine;
+                    foreach (ObjectId sectionId in osam.GetSectionViewIds())
+                    {
+                        SectionView secvg = trans.GetObject(sectionId, OpenMode.ForWrite) as SectionView;
+                        if (secvg != null)
+                            secvg.Description = "";
+                    }
+                }
+                trans.Commit();
+            }
+        }
+
     }
 }

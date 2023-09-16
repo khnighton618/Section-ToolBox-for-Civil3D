@@ -106,14 +106,28 @@ namespace Sections
             TimeElapseStripStatus.Text = "Elapsed Time: " + elaptime.Elapsed.ToString().Remove(8);
             elaptime.Reset();
         }
-
+        public double mod(double x, double y)
+        {
+            double m = 0;
+            if (y == 0)
+                m = 1;
+            else if (y > x)
+                m = x;
+            else
+                m = x - y * Math.Floor(x / y);
+            return m;
+        }
         [Obsolete]
         public void CreateSurf(DataView dv, DataView dv4, List<double> Station)
         {
             using (Transaction trans = db.TransactionManager.StartTransaction())
             {
-                
+                #region Variables and Constants
                 double maxOff = 0;
+                double vx = 1;
+                double v2 = 10;
+                double v3 = 20;
+                double v4 = 10;
                 dv.Sort = "OFF ASC";
                 if (Math.Abs((double)(dv[0][4])) > (double)(dv[dv.Count - 1][4]))
                 {
@@ -150,7 +164,7 @@ namespace Sections
                 ObjectIdCollection pol3dobjcol = new ObjectIdCollection();
                 DataView dv3 = null;
                 dv3 = dv4;
-                PromptPointResult se = ed.GetPoint("Select Insert Point");
+                PromptPointResult se = ed.GetPoint("Select Insert Point of Section views:");
                 double X_insert = se.Value.X;
                 double Y_insert = se.Value.Y;
                 PromptPointResult se2 = ed.GetPoint("\n Select CenterLine Point:");
@@ -167,22 +181,24 @@ namespace Sections
                 Point3dCollection pos = new Point3dCollection();
                 BlockTable bt = (BlockTable)trans.GetObject(db.BlockTableId, OpenMode.ForRead, false);
                 BlockTableRecord btr = (BlockTableRecord)trans.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite, false);
+                #endregion
                 //--------Create 3D PolyLines and 2D PolyLines-----------
                 try
                 {
                     for (int i = 0; i < Station.Count; i++)
                     {
                         Profile prof = trans.GetObject(align2.GetProfileIds()[LS_Prof.SelectedIndices[0]], OpenMode.ForRead) as Profile;
-                        elev = prof.ElevationAt(Station[i]);
 
+                        elev = prof.ElevationAt(Station[i]);
                         elevMin = prof.ElevationMin;
+
                         for (int j = 0; j < dv3.Count; j++)
                         {
                             if ((double)(dv3[j][3]) == Station[i])
                             {
 
                                 Point3d po3d = new Point3d((double)(dv3[j][0]), (double)(dv3[j][1]), (double)(dv3[j][2]));
-                                Point2d po2d = new Point2d(X_insert + 2.5 * id * maxOff + (double)(dv3[j][4]), Y_insert + (double)(dv3[j][2]) - elevMin);
+                                Point2d po2d = new Point2d(X_insert + (vx * id * maxOff + (double)(dv3[j][4])) * 1, Y_insert + (double)(dv3[j][2]) - elevMin + Math.Floor(i / v2) * v3);
                                 po3d2.Add(po3d);
                                 po2d2.Add(po2d);
                             }
@@ -217,7 +233,7 @@ namespace Sections
                         pol2d.Closed = true;
                         po2d2.Clear();
                         Polyline polysample2 = polysample.Clone() as Polyline;
-                        Vector3d pom = new Vector3d(X_insert + 2.5 * id * maxOff - Xc, Y_insert + elev - elevMin - Yc, 0);
+                        Vector3d pom = new Vector3d(X_insert + vx * id * maxOff - Xc, Y_insert + elev - elevMin - Yc + Math.Floor(i / v2) * v3, 0);
                         Matrix3d mat = Matrix3d.Displacement(pom);
                         polysample2.TransformBy(mat);
                         btr.AppendEntity(polysample2);
@@ -278,6 +294,7 @@ namespace Sections
                             //------------------------------------------------
                             ObjectIdCollection ObjIds = new ObjectIdCollection();
                             //-----------------Regions and Hatches-------------------------------
+                            #region Regions and Hatches
                             if (checkBoxHatch.Checked == true)
                             {
                                 if (reg3 != null && reg3.Area != 0)
@@ -391,7 +408,9 @@ namespace Sections
                                     ObjIds.Clear();
                                 }
                             }
+                            #endregion
                             //------Text Distance Between Two Surface-----
+
                             ObjIds.Clear();
                             double dist = 0;
                             for (int k = 0; k < pol2d.NumberOfVertices; k++)
@@ -430,6 +449,7 @@ namespace Sections
                             reg4.Erase();
                         }
                         id = id + 5;
+                        v4 = v4 + v2;
                     }
                     Create_Table(bt, btr, table, pos, Station, trans, tsId);
                     if (chkformat.Checked == true)
@@ -625,7 +645,9 @@ namespace Sections
                             break;
                         }
                     }
-                    PromptSelectionResult se1 = ed.GetSelection();
+                    PromptSelectionOptions op = new PromptSelectionOptions();
+                    op.MessageForAdding = "Select Tunnel Section Polyline:";
+                    PromptSelectionResult se1 = ed.GetSelection(op);
                     if (se1.Status == PromptStatus.Error) return;
                     SelectionSet Set1 = se1.Value;
                     ObjectId[] ids1 = Set1.GetObjectIds();
@@ -775,7 +797,9 @@ namespace Sections
                             break;
                         }
                     }
-                    PromptSelectionResult se1 = ed.GetSelection();
+                    PromptSelectionOptions op = new PromptSelectionOptions();
+                    op.MessageForAdding = "Select Tunnel Section Polyline:";
+                    PromptSelectionResult se1 = ed.GetSelection(op);
                     if (se1.Status == PromptStatus.Error) return;
                     SelectionSet Set1 = se1.Value;
                     ObjectId[] ids1 = Set1.GetObjectIds();
@@ -1243,7 +1267,8 @@ namespace Sections
             return res;
         }
 
-        public void BoundryPolygone(double elev, Polyline pol2d, Polyline polysample2, ref Polyline BoundPoly)
+        //Create Section Views :Box and elevation and offset text and lines 
+        public void BoundryPolygone(double elev, Polyline pol2d, Polyline polysample2, ref Polyline BoundPoly) 
         {
             BoundPoly = new Polyline();
             int v = 0;
@@ -1261,10 +1286,8 @@ namespace Sections
             double datumZ =  Math.Floor(elev);
             double LxR = max_X - ave_X;
             double LxL = ave_X - min_X;
-            //Lx = Math.Floor(Lx);
             double LyU = max_Y - ave_Y;
             double LyD = ave_Y - min_Y;
-            //Ly = Math.Floor(Ly);
             double LxR_Count = Math.Floor(LxR / 1);
             double LxL_Count = Math.Floor(LxL / 1);
             double LxR_res = LxR - LxR_Count;
@@ -1272,34 +1295,20 @@ namespace Sections
             System.Data.DataTable tabx = new System.Data.DataTable();
             tabx.Columns.Add("X", typeof(double));
             tabx.Columns.Add("Y", typeof(double));
-            //tabx.Rows.Add(max_X , min_Y );
-            //tabx.Rows.Add(max_X- LxR_res, min_Y);
             List<double> cord = new List<double>();
             for (int i=0;i<LxR_Count;i++)
             {
-                if (ave_X + 2 * i > max_X) continue;
-                //tabx.Rows.Add(ave_X + 2 * i, min_Y);
-                tabx.Rows.Add(ave_X + 2 * i, min_Y  + .1);
-                //tabx.Rows.Add(ave_X + 2 * i, min_Y );
-                //cord.Add(ave_X + 2 * i);
-                //cord.Add(min_Y);
+                if (ave_X + 2 * i > max_X) continue;                
+                tabx.Rows.Add(ave_X + 2 * i, min_Y  + .1);                
                 cord.Add(ave_X + 2 * i);
-                cord.Add(min_Y + .1);
-                //cord.Add(ave_X + 2 * i);
-                //cord.Add(min_Y);
+                cord.Add(min_Y + .1);                
             }
             for (int i = 0; i < LxL_Count; i++)
             {
                 if (ave_X - 2 * i < min_X) continue;
-                //tabx.Rows.Add(ave_X - 2 * i, min_Y);
                 tabx.Rows.Add(ave_X - 2 * i, min_Y + .1);
-                //tabx.Rows.Add(ave_X - 2 * i, min_Y );
-                //cord.Add(ave_X - 2 * i);
-                //cord.Add(min_Y);
                 cord.Add(ave_X - 2 * i);
                 cord.Add(min_Y + .1);
-                //cord.Add(ave_X - 2 * i);
-                //cord.Add(min_Y);
             }
             DataView dvX = new DataView(tabx);
             dvX.Sort = "X DESC, Y ASC";
@@ -1307,26 +1316,21 @@ namespace Sections
             double LyD_Count = Math.Floor(LyD / 1);
             System.Data.DataTable taby = new System.Data.DataTable();
             taby.Columns.Add("X", typeof(double));
-            taby.Columns.Add("Y", typeof(double));
-            //taby.Rows.Add(min_X , min_Y );
+            taby.Columns.Add("Y", typeof(double));            
             cord.Clear();
             for (int i = 0; i < LyU_Count; i++)
             {
-                if (ave_Y + 2 * i > max_Y) continue;
-                //taby.Rows.Add(min_X, ave_Y + 2 * i);
+                if (ave_Y + 2 * i > max_Y) continue;                
                 taby.Rows.Add(min_X + .1, ave_Y + 2 * i);
                 cord.Add(min_X + .1);
-                cord.Add(ave_Y + 2 * i);
-                //taby.Rows.Add(min_X , ave_Y + 2 * i);
+                cord.Add(ave_Y + 2 * i);                
             }
             for (int i = 0; i < LyD_Count; i++)
             {
-                if (ave_Y - 2 * i < min_Y) continue;
-                //taby.Rows.Add(min_X, ave_Y - 2 * i);
+                if (ave_Y - 2 * i < min_Y) continue;                
                 taby.Rows.Add(min_X + .1, ave_Y - 2 * i);
                 cord.Add(min_X + .1);
-                cord.Add(ave_Y - 2 * i);
-                //taby.Rows.Add(min_X , ave_Y - 2 * i);
+                cord.Add(ave_Y - 2 * i);                
             }
             DataView dvY = new DataView(taby);
             dvY.Sort = "Y ASC, X DESC";

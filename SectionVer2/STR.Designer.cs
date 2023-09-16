@@ -63,6 +63,8 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.chkDraw = new System.Windows.Forms.CheckBox();
             this.chkEGFG = new System.Windows.Forms.CheckBox();
+            this.ClearBTN = new System.Windows.Forms.Button();
+            this.label10 = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -301,7 +303,7 @@
             this.listBox_Codes.Location = new System.Drawing.Point(291, 117);
             this.listBox_Codes.Name = "listBox_Codes";
             this.listBox_Codes.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.listBox_Codes.Size = new System.Drawing.Size(144, 121);
+            this.listBox_Codes.Size = new System.Drawing.Size(144, 69);
             this.listBox_Codes.TabIndex = 6;
             this.listBox_Codes.SelectedIndexChanged += new System.EventHandler(this.ListBox_Codes_SelectedIndexChanged);
             // 
@@ -317,10 +319,10 @@
             // listBox_LinkCodes
             // 
             this.listBox_LinkCodes.FormattingEnabled = true;
-            this.listBox_LinkCodes.Location = new System.Drawing.Point(441, 51);
+            this.listBox_LinkCodes.Location = new System.Drawing.Point(443, 51);
             this.listBox_LinkCodes.Name = "listBox_LinkCodes";
             this.listBox_LinkCodes.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple;
-            this.listBox_LinkCodes.Size = new System.Drawing.Size(135, 186);
+            this.listBox_LinkCodes.Size = new System.Drawing.Size(133, 186);
             this.listBox_LinkCodes.TabIndex = 7;
             // 
             // label9
@@ -354,6 +356,25 @@
             this.chkEGFG.Text = "Draw EG,FG Lines?";
             this.chkEGFG.UseVisualStyleBackColor = true;
             // 
+            // ClearBTN
+            // 
+            this.ClearBTN.Location = new System.Drawing.Point(323, 216);
+            this.ClearBTN.Name = "ClearBTN";
+            this.ClearBTN.Size = new System.Drawing.Size(75, 23);
+            this.ClearBTN.TabIndex = 40;
+            this.ClearBTN.Text = "Clear";
+            this.ClearBTN.UseVisualStyleBackColor = true;
+            this.ClearBTN.Click += new System.EventHandler(this.ClearBTN_Click);
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(278, 198);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(157, 13);
+            this.label10.TabIndex = 41;
+            this.label10.Text = "Clear SectionViews Description:";
+            // 
             // STR
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -361,6 +382,8 @@
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.ClientSize = new System.Drawing.Size(582, 272);
+            this.Controls.Add(this.label10);
+            this.Controls.Add(this.ClearBTN);
             this.Controls.Add(this.chkEGFG);
             this.Controls.Add(this.chkDraw);
             this.Controls.Add(this.listBox_LinkCodes);
@@ -388,7 +411,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(598, 311);
             this.Name = "STR";
-            this.Text = " Stripping Length Ver 1.3.5";
+            this.Text = " Stripping Length Ver 1.3.6";
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.statusStrip1.ResumeLayout(false);
@@ -433,5 +456,7 @@
         private System.Windows.Forms.CheckBox chkDraw;
         private System.Windows.Forms.CheckBox chkEGFG;
         private System.Windows.Forms.ToolStripMenuItem saveAsXLSToolStripMenuItem;
+        private System.Windows.Forms.Button ClearBTN;
+        private System.Windows.Forms.Label label10;
     }
 }

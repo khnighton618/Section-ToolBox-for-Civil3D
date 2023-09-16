@@ -54,6 +54,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>bin\Debug\acmgd.dll</HintPath>
     </Reference>
+    <Reference Include="AcWindows">
+      <HintPath>C:\Program Files\Autodesk\AutoCAD 2023\AcWindows.dll</HintPath>
+    </Reference>
     <Reference Include="AdUIMgd">
       <HintPath>C:\Program Files\Autodesk\AutoCAD 2022\AdUIMgd.dll</HintPath>
     </Reference>
@@ -68,6 +71,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>bin\Debug\AeccDbMgd.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
@@ -136,9 +140,6 @@
     <Compile Include="Other App\BatchPlot\Batch_Plot.Designer.cs">
       <DependentUpon>Batch_Plot.cs</DependentUpon>
     </Compile>
-    <Compile Include="Other App\BatchPlot\BP2.cs" />
-    <Compile Include="Other App\BatchPlot\BP3.cs" />
-    <Compile Include="Other App\BatchPlot\BP4.cs" />
     <Compile Include="Other App\ConvexHull\ConvexHull.cs" />
     <Compile Include="Other App\ConvexHull\ConvexHullThreadUsage.cs" />
     <Compile Include="Other App\ConvexHull\Geometry.cs" />
@@ -226,8 +227,11 @@
     <Compile Include="STR2.designer.cs">
       <DependentUpon>STR2.cs</DependentUpon>
     </Compile>
-    <Compile Include="UserControl1.xaml.cs">
-      <DependentUpon>UserControl1.xaml</DependentUpon>
+    <Compile Include="Subdividing.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Subdividing.Designer.cs">
+      <DependentUpon>Subdividing.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -292,6 +296,9 @@
     <EmbeddedResource Include="STR2.resx">
       <DependentUpon>STR2.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Subdividing.resx">
+      <DependentUpon>Subdividing.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -304,9 +311,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\a.jpg" />
-    <None Include="Resources\Section Editor.JPG" />
-    <None Include="Resources\CC,CF,T.jpg" />
-    <Content Include="Resources\Csdpplus_0000.png" />
+    <EmbeddedResource Include="Resources\Section Editor.JPG" />
+    <EmbeddedResource Include="Resources\CC,CF,T.jpg" />
+    <None Include="Resources\Csdpplus.png" />
     <None Include="Resources\Desc.png" />
     <Content Include="Resources\photo_2016-04-17_10-47-12.jpg" />
   </ItemGroup>
@@ -329,12 +336,6 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Include="UserControl1.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

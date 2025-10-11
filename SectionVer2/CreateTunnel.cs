@@ -8,7 +8,6 @@ using System.Diagnostics;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.Runtime;
 
 
 using Autodesk.Civil.ApplicationServices;
@@ -16,6 +15,7 @@ using Autodesk.Civil.DatabaseServices;
 using System.IO;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Colors;
+using Polyline = Autodesk.AutoCAD.DatabaseServices.Polyline;
 
 namespace Sections
 {
@@ -39,10 +39,13 @@ namespace Sections
         private MenuStrip menuStrip1;
         public TinSurface surface;
         public double[] Station2;
-        public Polyline polysample;
+        DataView DvText;
+        List<double> StationText;
+        public Autodesk.AutoCAD.DatabaseServices.Polyline polysample;
         public string ii { get; set; }
+
         public CreateTunnel()
-        {            
+        {
             InitializeComponent();
             LS_SLG.Items.Clear();
             LS_Prof.Items.Clear();
@@ -57,16 +60,16 @@ namespace Sections
                         System.Windows.Forms.MessageBox.Show("You must have at least one alignment", "No Alignment", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         throw new System.Exception("There is no alignment");
                     }
-                    int coalid = alIDs.Count;                    
+                    int coalid = alIDs.Count;
                     Alignment align = null;
                     for (int i = 0; i < coalid; i++)
                     {
                         ObjectId alignID = alIDs[i];
-                        align = trans.GetObject(alignID, OpenMode.ForRead) as Alignment;                        
+                        align = trans.GetObject(alignID, OpenMode.ForRead) as Alignment;
                         LS_Alg.Items.Add(align.Name);
-                    }                    
-                    LS_Alg.SelectedIndex = 0;                    
-                    
+                    }
+                    LS_Alg.SelectedIndex = 0;
+
                 }
                 catch (System.Exception ex)
                 {
@@ -94,6 +97,8 @@ namespace Sections
                 Sort_PointsBYSTA(ref dvFinal, ref dv, ref Station, ref dvTunnel);
             else
                 Sort_Points(ref dvFinal, ref dv, ref Station, ref dvTunnel);
+            DvText = dvFinal;
+            StationText = Station;
             ProgBar.Value = 100;
             if (dv == null || dvTunnel == null || Station == null || dvFinal == null)
             {
@@ -106,6 +111,7 @@ namespace Sections
             TimeElapseStripStatus.Text = "Elapsed Time: " + elaptime.Elapsed.ToString().Remove(8);
             elaptime.Reset();
         }
+
         public double mod(double x, double y)
         {
             double m = 0;
@@ -117,6 +123,7 @@ namespace Sections
                 m = x - y * Math.Floor(x / y);
             return m;
         }
+
         [Obsolete]
         public void CreateSurf(DataView dv, DataView dv4, List<double> Station)
         {
@@ -164,12 +171,13 @@ namespace Sections
                 ObjectIdCollection pol3dobjcol = new ObjectIdCollection();
                 DataView dv3 = null;
                 dv3 = dv4;
+                PromptPointResult se2 = ed.GetPoint("\n Select CenterLine Point of Tunnel Section:");
+                double Xc = se2.Value.X;
+                double Yc = se2.Value.Y;
                 PromptPointResult se = ed.GetPoint("Select Insert Point of Section views:");
                 double X_insert = se.Value.X;
                 double Y_insert = se.Value.Y;
-                PromptPointResult se2 = ed.GetPoint("\n Select CenterLine Point:");
-                double Xc = se2.Value.X;
-                double Yc = se2.Value.Y;
+
                 int id = 0;
                 double elev = 0;
                 double elevMin = 0;
@@ -198,7 +206,10 @@ namespace Sections
                             {
 
                                 Point3d po3d = new Point3d((double)(dv3[j][0]), (double)(dv3[j][1]), (double)(dv3[j][2]));
-                                Point2d po2d = new Point2d(X_insert + (vx * id * maxOff + (double)(dv3[j][4])) * 1, Y_insert + (double)(dv3[j][2]) - elevMin + Math.Floor(i / v2) * v3);
+
+                                // Location of every section views: + Math.Floor(i / v2) * v3
+
+                                Point2d po2d = new Point2d(X_insert + (vx * id * maxOff + (double)(dv3[j][4])) * 1, Y_insert + (double)(dv3[j][2]) - elevMin);
                                 po3d2.Add(po3d);
                                 po2d2.Add(po2d);
                             }
@@ -233,11 +244,12 @@ namespace Sections
                         pol2d.Closed = true;
                         po2d2.Clear();
                         Polyline polysample2 = polysample.Clone() as Polyline;
-                        Vector3d pom = new Vector3d(X_insert + vx * id * maxOff - Xc, Y_insert + elev - elevMin - Yc + Math.Floor(i / v2) * v3, 0);
+                        //+ Math.Floor(i / v2) * v3
+                        Vector3d pom = new Vector3d(X_insert + vx * id * maxOff - Xc, Y_insert + elev - elevMin - Yc, 0);
                         Matrix3d mat = Matrix3d.Displacement(pom);
                         polysample2.TransformBy(mat);
                         btr.AppendEntity(polysample2);
-                        trans.AddNewlyCreatedDBObject(polysample2, true);                        
+                        trans.AddNewlyCreatedDBObject(polysample2, true);
                         //------------Create Regions and Hatches and Section Views and Tables------------------------------------
                         if (checkBoxSection.Checked == true)
                         {
@@ -422,7 +434,7 @@ namespace Sections
                                 DBText Text = new DBText();
 
                                 double rot = Math.Atan((pol2d.GetPoint3dAt(k).Y - po.Point.Y) / (pol2d.GetPoint3dAt(k).X - po.Point.X));
-                                Text.Height = .1;                                
+                                Text.Height = .1;
 
                                 if (isinnside(polysample2, pol2d.GetPoint3dAt(k), po.Point, rot))
                                     Text.TextString = "-" + dist.ToString("F3");
@@ -432,7 +444,7 @@ namespace Sections
                                 if (po.Point.X < (polysample2.Bounds.Value.MaxPoint.X + polysample2.Bounds.Value.MinPoint.X) / 2)
                                 {
                                     Text.HorizontalMode = TextHorizontalMode.TextRight;
-                                    Text.AlignmentPoint = new Point3d(pol2d.GetPoint3dAt(k).X, pol2d.GetPoint3dAt(k).Y, 0);                            
+                                    Text.AlignmentPoint = new Point3d(pol2d.GetPoint3dAt(k).X, pol2d.GetPoint3dAt(k).Y, 0);
                                 }
                                 else
                                 {
@@ -495,7 +507,7 @@ namespace Sections
                         surface.Rebuild();
                     }
                     trans.Commit();
-                }                
+                }
                 catch (System.Exception ex)
                 {
                     var st = new System.Diagnostics.StackTrace(ex, true);
@@ -507,7 +519,7 @@ namespace Sections
         }
 
         [Obsolete]
-        public void Create_Table(BlockTable bt, BlockTableRecord btr, System.Data.DataTable table, Point3dCollection pos, 
+        public void Create_Table(BlockTable bt, BlockTableRecord btr, System.Data.DataTable table, Point3dCollection pos,
             List<double> Station, Transaction trans, ObjectId tsId)
         {
             double OverEx = 0;
@@ -529,7 +541,7 @@ namespace Sections
             string sta0 = Station[0].ToString();
             for (int i = 0; i < dv.Count; i++)
             {
-                if(i!=0& i != dv.Count - 1)
+                if (i != 0 & i != dv.Count - 1)
                 {
                     OverEx_Vol = (Station[i] - Station[i - 1]) * ((double)dv[i][0] + (double)dv[i - 1][0]) / 2;
                     UnderExc_Vol = (Station[i] - Station[i - 1]) * ((double)dv[i][1] + (double)dv[i - 1][1]) / 2;
@@ -544,7 +556,7 @@ namespace Sections
                     SumOverEx_Vol_P = SumOverEx_Vol_P + OverEx_Vol_P;
                     SumUnderExc_Vol_P = SumUnderExc_Vol_P + UnderExc_Vol_P;
                 }
-                else if(i==dv.Count-1)
+                else if (i == dv.Count - 1)
                 {
                     OverEx_Vol_P = (Station[i] - Station[i - 1]) * ((double)dv[i - 1][0] + 4 * (double)dv[i][0]) / 6;
                     UnderExc_Vol_P = (Station[i] - Station[i - 1]) * ((double)dv[i - 1][1] + 4 * (double)dv[i][1]) / 6;
@@ -555,14 +567,14 @@ namespace Sections
                 }
                 OverEx = (double)dv[i][0];
                 UnderExc = (double)dv[i][1];
-                Exc = (double)dv[i][2];                
+                Exc = (double)dv[i][2];
                 Autodesk.AutoCAD.DatabaseServices.Table tb = new Autodesk.AutoCAD.DatabaseServices.Table();
                 tb.TableStyle = tsId;
                 tb.SetSize(6, 7);
                 tb.SetRowHeight(1.3);
                 tb.SetColumnWidth(2.052);
                 tb.Position = pos[i];
-                tb.SetTextHeight(.2, (int)(RowType.DataRow | RowType.HeaderRow | RowType.TitleRow));               
+                tb.SetTextHeight(.2, (int)(RowType.DataRow | RowType.HeaderRow | RowType.TitleRow));
                 double staform = Station[i] - Math.Floor(Station[i] / 1000) * 1000;
                 string staform2 = "";
                 if (staform < 10)
@@ -615,14 +627,14 @@ namespace Sections
                 tb.Rows[2].ContentColor = Color.FromColorIndex(ColorMethod.ByAci, 140);
                 tb.Rows[3].ContentColor = Color.FromColorIndex(ColorMethod.ByAci, 140);
                 tb.Rows[4].ContentColor = Color.FromColorIndex(ColorMethod.ByAci, 140);
-                tb.Rows[5].ContentColor = Color.FromColorIndex(ColorMethod.ByAci, 140);              
+                tb.Rows[5].ContentColor = Color.FromColorIndex(ColorMethod.ByAci, 140);
                 tb.GenerateLayout();
                 btr.AppendEntity(tb);
                 trans.AddNewlyCreatedDBObject(tb, true);
-            }            
+            }
         }
 
-        public void Sort_Points(ref DataView dvFinal, ref DataView dv, ref List<double> Station,ref DataView dvTunnel)
+        public void Sort_Points(ref DataView dvFinal, ref DataView dv, ref List<double> Station, ref DataView dvTunnel)
         {
             try
             {
@@ -682,11 +694,11 @@ namespace Sections
                         ii = TextFile[i + 0];
                         align2.StationOffset(x, y, ref sta, ref off);
                         sta = Convert.ToDouble(TextFile[i + 4]);
-                        tt2.Add(x);
-                        tt2.Add(y);
-                        tt2.Add(z);
-                        tt2.Add(sta);
-                        tt2.Add(off);
+                        //tt2.Add(x);
+                        //tt2.Add(y);
+                        //tt2.Add(z);
+                        //tt2.Add(sta);
+                        //tt2.Add(off);
                         table.Rows.Add(x, y, z, sta, off);
                         slgsta.Add(sta);
                     }
@@ -704,14 +716,22 @@ namespace Sections
                         y = Convert.ToDouble(TextFile[i + 2]);
                         z = Convert.ToDouble(TextFile[i + 3]);
                         ii = TextFile[i + 0];
-                        align2.StationOffset(x, y, ref sta, ref off);
+                        try
+                        {
+                            align2.StationOffset(x, y, ref sta, ref off);
+                        }
+                        catch
+                        {
+                            ed.WriteMessage("\n You must remove or edit Point N.O:" + ii);
+                            continue;
+                        }
                         //slope = prof.GradeAt(sta);
-                        tol = 0; //Math.Sin(Math.Atan(slope)) * (polysample.Bounds.Value.MaxPoint.Y - polysample.Bounds.Value.MinPoint.Y);
-                        tt2.Add(x);
-                        tt2.Add(y);
-                        tt2.Add(z);
-                        tt2.Add(Math.Abs(tol - sta));
-                        tt2.Add(off);
+                        //tol = 0; //Math.Sin(Math.Atan(slope)) * (polysample.Bounds.Value.MaxPoint.Y - polysample.Bounds.Value.MinPoint.Y);
+                        //tt2.Add(x);
+                        //tt2.Add(y);
+                        //tt2.Add(z);
+                        //tt2.Add(Math.Abs(tol - sta));
+                        //tt2.Add(off);
                         table.Rows.Add(x, y, z, sta, off);
                     }
                     //--------------------------------- 
@@ -737,12 +757,12 @@ namespace Sections
                     table2.Columns.Add("Z", typeof(double));
                     table2.Columns.Add("STA", typeof(double));
                     table2.Columns.Add("OFF", typeof(double));
-                    System.Data.DataTable tab2 = new System.Data.DataTable();
-                    tab2.Columns.Add("X", typeof(double));
-                    tab2.Columns.Add("Y", typeof(double));
-                    tab2.Columns.Add("Z", typeof(double));
-                    tab2.Columns.Add("STA", typeof(double));
-                    tab2.Columns.Add("OFF", typeof(double));
+                    //System.Data.DataTable tab2 = new System.Data.DataTable();
+                    //tab2.Columns.Add("X", typeof(double));
+                    //tab2.Columns.Add("Y", typeof(double));
+                    //tab2.Columns.Add("Z", typeof(double));
+                    //tab2.Columns.Add("STA", typeof(double));
+                    //tab2.Columns.Add("OFF", typeof(double));
                     DataView dv2;
                     for (int i = 0; i < dv.Count; i++)
                     {
@@ -752,7 +772,7 @@ namespace Sections
                         table2.Rows.Add(x, y, dv[i][2], dv[i][3], dv[i][4]);
                     }
                     dv2 = new DataView(table2);
-                    dv2.Sort = "STA ASC";                   
+                    dv2.Sort = "STA ASC";
                     dvFinal = dv2;
                     Station = slgsta;
                     dv3 = new DataView(table2);
@@ -763,7 +783,7 @@ namespace Sections
                     }
                     else
                         boundry(dvFinal, Station, ref dvTunnel); //My own Boundry Creation for Tunne Section
-                }                
+                }
             }
             catch (System.Exception ex)
             {
@@ -863,10 +883,10 @@ namespace Sections
                 double m1 = 0;
                 for (int i = 0; i < dv1.Count; i++)
                 {
-                    m1 = sta1[ind];                    
+                    m1 = sta1[ind];
                     df.Add(Math.Abs(sta1[i] - m1));
-                    if (Math.Abs(sta1[i]-m1)<= Convert.ToDouble(Tolbox.Text)&i<dv1.Count-1)
-                    {                        
+                    if (Math.Abs(sta1[i] - m1) <= Convert.ToDouble(Tolbox.Text) & i < dv1.Count - 1)
+                    {
                         m = m + sta1[i];
                         s++;
                         indx++;
@@ -875,7 +895,7 @@ namespace Sections
                     {
                         x1 = m / s;
                         if (m == 0 & s == 0) continue;
-                        for(int j=0; j<s+1;j++)
+                        for (int j = 0; j < s + 1; j++)
                         {
                             sta2.Add(x1);
                         }
@@ -887,27 +907,27 @@ namespace Sections
                 m = 0;
                 s = 0;
                 df.Clear();
-                for (int i = 1; i < sta2.Count-1; i++)
+                for (int i = 1; i < sta2.Count - 1; i++)
                 {
                     m = sta2[s];
                     df.Add(Math.Abs(sta2[i] - m));
-                    if (Math.Abs(sta2[i] - m) <= Convert.ToDouble(Tolbox.Text)& Math.Abs(sta2[i] - m) !=0)
+                    if (Math.Abs(sta2[i] - m) <= Convert.ToDouble(Tolbox.Text) & Math.Abs(sta2[i] - m) != 0)
                     {
-                        sta3.Add(m);                        
+                        sta3.Add(m);
                     }
                     else
                     {
                         sta3.Add(sta2[i]);
                         s++;
-                    }                    
+                    }
                 }
-                sta3.Add(sta2[sta2.Count-1]);
+                sta3.Add(sta2[sta2.Count - 1]);
                 sta3.Add(sta2[sta2.Count - 1]);
                 for (int i = 0; i < sta3.Count; i++)
                 {
                     dv1[i].Row.BeginEdit();
                     dv1[i][3] = sta3[i];
-                }                
+                }
                 Station = sta2.Distinct().ToList();
                 dv = dv1;
                 dvFinal = dv1;
@@ -992,12 +1012,12 @@ namespace Sections
                     sta = (double)dv1[j][3];
                     if (sta == Station[i])
                     {
-                        tab.Rows.Add((double)dv1[j][2], (double)dv1[j][4],0, (double)dv1[j][0], (double)dv1[j][1]);
+                        tab.Rows.Add((double)dv1[j][2], (double)dv1[j][4], 0, (double)dv1[j][0], (double)dv1[j][1]);
                     }
                 }
-                dv = new DataView(tab);               
+                dv = new DataView(tab);
                 double x;
-                double y;                
+                double y;
                 double xc = 0;
                 double yc = 0;
                 for (int j = 0; j < dv.Count; j++)
@@ -1024,17 +1044,18 @@ namespace Sections
                 for (int k = 0; k < dv.Count; k++)
                 {
                     x = (double)dv[k][3];
-                    y = (double)dv[k][4];                    
+                    y = (double)dv[k][4];
                     tab2.Rows.Add(x, y, (double)dv[k][0], Station[i], (double)dv[k][1]);
                 }
                 tab.Rows.Clear();
             }
             dvsort = new DataView(tab2);
-        }     
-        
+        }
+
         private void LS_Alg_SelectedIndexChanged(object sender, EventArgs e)
         {
-            LS_SLG.Items.Clear();            
+            LS_SLG.Items.Clear();
+            LS_Prof.Items.Clear();
             using (Transaction trans = db.TransactionManager.StartTransaction())
             {
                 try
@@ -1043,11 +1064,11 @@ namespace Sections
                     {
                         ObjectId alIDs = civildoc.GetAlignmentIds()[i];
                         Alignment Align = trans.GetObject(alIDs, OpenMode.ForRead) as Alignment;
-                        if (Align.Name == LS_Alg.Items[i].ToString())
+                        if (Align.Name == LS_Alg.SelectedItem.ToString())
                         {
                             align2 = Align;
                             alignID2 = alIDs;
-                        }                                      
+                        }
 
                     }
                     SampleLineGroup slg2;
@@ -1072,16 +1093,16 @@ namespace Sections
             }
         }
 
-        public void RegionToPolyline(Region reg,ref DBObjectCollection objs)
-        {            
-            Transaction tr =  doc.TransactionManager.StartTransaction();            
+        public void RegionToPolyline(Region reg, ref DBObjectCollection objs)
+        {
+            Transaction tr = doc.TransactionManager.StartTransaction();
             using (tr)
             {
                 BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
-                BlockTableRecord btr =  (BlockTableRecord)tr.GetObject( bt[BlockTableRecord.ModelSpace], OpenMode.ForRead);
+                BlockTableRecord btr = (BlockTableRecord)tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForRead);
                 if (reg != null)
                 {
-                    objs =  PolylineFromRegion(reg);
+                    objs = PolylineFromRegion(reg);
                     // Append our new entities to the database
                     btr.UpgradeOpen();
                     foreach (Autodesk.AutoCAD.DatabaseServices.Entity ent in objs)
@@ -1092,12 +1113,12 @@ namespace Sections
                     // Finally we erase the original region
                     reg.UpgradeOpen();
                     reg.Erase();
-                }                
+                }
                 tr.Commit();
             }
         }
 
-        private static double BulgeFromCurve( Curve cv , bool clockwise)
+        private static double BulgeFromCurve(Curve cv, bool clockwise)
         {
             double bulge = 0.0;
             Arc a = cv as Arc;
@@ -1128,13 +1149,13 @@ namespace Sections
             // We will return a collection of entities
             // (should include closed Polylines and other
             // closed curves, such as Circles)
-            DBObjectCollection res =  new DBObjectCollection();
+            DBObjectCollection res = new DBObjectCollection();
             // Explode Region -> collection of Curves / Regions
-            DBObjectCollection cvs =  new DBObjectCollection();
+            DBObjectCollection cvs = new DBObjectCollection();
             reg.Explode(cvs);
             // Create a plane to convert 3D coords
             // into Region coord system
-            Plane pl =  new Plane(new Point3d(0, 0, 0), reg.Normal);
+            Plane pl = new Plane(new Point3d(0, 0, 0), reg.Normal);
             using (pl)
             {
                 bool finished = false;
@@ -1167,14 +1188,14 @@ namespace Sections
                                     fstCvIdx = i;
                             }
                         }
-                    }                    
+                    }
                     if (fstCvIdx >= 0)
                     {
                         // For the initial segment take the first
                         // Curve in the collection
                         Curve fstCv = (Curve)cvs[fstCvIdx];
                         // The resulting Polyline
-                       Polyline p = new Polyline();
+                        Polyline p = new Polyline();
                         // Set common entity properties from the Region
                         p.SetPropertiesFrom(reg);
                         // Add the first two vertices, but only set the
@@ -1184,8 +1205,8 @@ namespace Sections
                         // clockwise (the default for arcs), as we're
                         // not swapping the order of the vertices to
                         // make them fit the Polyline's order
-                        p.AddVertexAt( p.NumberOfVertices, fstCv.StartPoint.Convert2d(pl), BulgeFromCurve(fstCv, false), 0, 0);
-                        p.AddVertexAt( p.NumberOfVertices, fstCv.EndPoint.Convert2d(pl),  0, 0, 0 );
+                        p.AddVertexAt(p.NumberOfVertices, fstCv.StartPoint.Convert2d(pl), BulgeFromCurve(fstCv, false), 0, 0);
+                        p.AddVertexAt(p.NumberOfVertices, fstCv.EndPoint.Convert2d(pl), 0, 0, 0);
                         cvs.Remove(fstCv);
                         // The next point to look for
                         Point3d nextPt = fstCv.EndPoint;
@@ -1216,7 +1237,7 @@ namespace Sections
                                     {
                                         // Calculate the bulge for the curve and
                                         // set it on the previous vertex
-                                        double bulge =  BulgeFromCurve(cv, cv.EndPoint == nextPt);
+                                        double bulge = BulgeFromCurve(cv, cv.EndPoint == nextPt);
                                         if (bulge != 0.0)
                                             p.SetBulgeAt(p.NumberOfVertices - 1, bulge);
                                         // Reverse the points, if needed
@@ -1227,7 +1248,7 @@ namespace Sections
                                             nextPt = cv.StartPoint;
                                         // Add out new vertex (bulge will be set next
                                         // time through, as needed)
-                                        p.AddVertexAt( p.NumberOfVertices, nextPt.Convert2d(pl),  0, 0, 0 );
+                                        p.AddVertexAt(p.NumberOfVertices, nextPt.Convert2d(pl), 0, 0, 0);
                                         // Remove our curve from the list, which
                                         // decrements the count, of course
                                         cvs.Remove(cv);
@@ -1252,8 +1273,8 @@ namespace Sections
                         {
                             Region subReg = obj as Region;
                             if (subReg != null)
-                            {                                
-                                DBObjectCollection subRes =  PolylineFromRegion(subReg);
+                            {
+                                DBObjectCollection subRes = PolylineFromRegion(subReg);
                                 foreach (Autodesk.AutoCAD.DatabaseServices.DBObject o in subRes)
                                     res.Add(o);
                                 cvs.Remove(subReg);
@@ -1268,7 +1289,7 @@ namespace Sections
         }
 
         //Create Section Views :Box and elevation and offset text and lines 
-        public void BoundryPolygone(double elev, Polyline pol2d, Polyline polysample2, ref Polyline BoundPoly) 
+        public void BoundryPolygone(double elev, Polyline pol2d, Polyline polysample2, ref Polyline BoundPoly)
         {
             BoundPoly = new Polyline();
             int v = 0;
@@ -1283,7 +1304,7 @@ namespace Sections
             if (polysample2.Bounds.Value.MinPoint.Y < min_Y) min_Y = polysample2.Bounds.Value.MinPoint.Y - 2;
             double ave_X = (polysample2.Bounds.Value.MaxPoint.X + polysample2.Bounds.Value.MinPoint.X) / 2;
             double ave_Y = polysample2.StartPoint.Y - elev + Math.Floor(elev);
-            double datumZ =  Math.Floor(elev);
+            double datumZ = Math.Floor(elev);
             double LxR = max_X - ave_X;
             double LxL = ave_X - min_X;
             double LyU = max_Y - ave_Y;
@@ -1296,12 +1317,12 @@ namespace Sections
             tabx.Columns.Add("X", typeof(double));
             tabx.Columns.Add("Y", typeof(double));
             List<double> cord = new List<double>();
-            for (int i=0;i<LxR_Count;i++)
+            for (int i = 0; i < LxR_Count; i++)
             {
-                if (ave_X + 2 * i > max_X) continue;                
-                tabx.Rows.Add(ave_X + 2 * i, min_Y  + .1);                
+                if (ave_X + 2 * i > max_X) continue;
+                tabx.Rows.Add(ave_X + 2 * i, min_Y + .1);
                 cord.Add(ave_X + 2 * i);
-                cord.Add(min_Y + .1);                
+                cord.Add(min_Y + .1);
             }
             for (int i = 0; i < LxL_Count; i++)
             {
@@ -1316,21 +1337,21 @@ namespace Sections
             double LyD_Count = Math.Floor(LyD / 1);
             System.Data.DataTable taby = new System.Data.DataTable();
             taby.Columns.Add("X", typeof(double));
-            taby.Columns.Add("Y", typeof(double));            
+            taby.Columns.Add("Y", typeof(double));
             cord.Clear();
             for (int i = 0; i < LyU_Count; i++)
             {
-                if (ave_Y + 2 * i > max_Y) continue;                
+                if (ave_Y + 2 * i > max_Y) continue;
                 taby.Rows.Add(min_X + .1, ave_Y + 2 * i);
                 cord.Add(min_X + .1);
-                cord.Add(ave_Y + 2 * i);                
+                cord.Add(ave_Y + 2 * i);
             }
             for (int i = 0; i < LyD_Count; i++)
             {
-                if (ave_Y - 2 * i < min_Y) continue;                
+                if (ave_Y - 2 * i < min_Y) continue;
                 taby.Rows.Add(min_X + .1, ave_Y - 2 * i);
                 cord.Add(min_X + .1);
-                cord.Add(ave_Y - 2 * i);                
+                cord.Add(ave_Y - 2 * i);
             }
             DataView dvY = new DataView(taby);
             dvY.Sort = "Y ASC, X DESC";
@@ -1339,16 +1360,16 @@ namespace Sections
                 Point2d po = new Point2d((double)dvX[i][0], (double)dvX[i][1]);
                 PointCol.Add(po);
             }
-            for (int i = 0; i <  dvY.Count; i++)
+            for (int i = 0; i < dvY.Count; i++)
             {
                 Point2d po = new Point2d((double)dvY[i][0], (double)dvY[i][1]);
                 PointCol.Add(po);
             }
             Point2dCollection POCollBound = new Point2dCollection();
-            POCollBound.Add(new Point2d(max_X , max_Y ));
-            POCollBound.Add(new Point2d(max_X , min_Y ));
-            POCollBound.Add(new Point2d(min_X , min_Y ));
-            POCollBound.Add(new Point2d(min_X , max_Y ));
+            POCollBound.Add(new Point2d(max_X, max_Y));
+            POCollBound.Add(new Point2d(max_X, min_Y));
+            POCollBound.Add(new Point2d(min_X, min_Y));
+            POCollBound.Add(new Point2d(min_X, max_Y));
             for (int j = 0; j < POCollBound.Count; j++)
             {
                 BoundPoly.AddVertexAt(v, POCollBound[j], 0, 0, 0);
@@ -1358,9 +1379,9 @@ namespace Sections
             BoundPoly.ColorIndex = 3;
             double temp = 0;
             double temp2 = 0;
-            for (int i = 0; i < PointCol.Count-1; i++)
+            for (int i = 0; i < PointCol.Count - 1; i++)
             {
-                temp2 = Math.Abs(PointCol[i].X - PointCol[i+1].X) + Math.Abs(PointCol[i].Y - PointCol[i+1].Y);
+                temp2 = Math.Abs(PointCol[i].X - PointCol[i + 1].X) + Math.Abs(PointCol[i].Y - PointCol[i + 1].Y);
                 if (temp2 == 0)
                     PointCol.RemoveAt(i);
                 if (Math.Abs(PointCol[i].Y - PointCol[i + 1].Y) == 0)
@@ -1384,12 +1405,12 @@ namespace Sections
                 acMText.Height = .1;
                 double textX = PointCol[i].X - ave_X;
                 double textY = PointCol[i].Y - ave_Y + datumZ;
-                if (dx==0)
+                if (dx == 0)
                     acMText.Contents = textX.ToString("F1");
-                if(dy==0)
+                if (dy == 0)
                 {
                     acMText.Contents = textY.ToString("F0");
-                    acMText.Location = new Point3d(PointCol[i].X + dx - .8, PointCol[i].Y , 0);
+                    acMText.Location = new Point3d(PointCol[i].X + dx - .8, PointCol[i].Y, 0);
                 }
                 using (Transaction trans = db.TransactionManager.StartTransaction())
                 {
@@ -1408,114 +1429,121 @@ namespace Sections
                 BlockTableRecord btr = (BlockTableRecord)trans.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite, false);
                 btr.AppendEntity(BoundPoly);
                 trans.AddNewlyCreatedDBObject(BoundPoly, true);
-                trans.Commit();               
+                trans.Commit();
             }
         }
 
         private void saveToolStripMenuItem_Click_1(object sender, EventArgs e)
         {
-            DataView dvFinal = null;
-            DataView dv = null;
-            DataView dvTunnel = null;
-            List<double> Station = null;
-            Sort_Points(ref dvFinal, ref dv, ref Station, ref dvTunnel);
-            dvFinal.Sort = "OFF ASC";
-            List<string> txt = new List<string>();
-            string ErrSLG = "";
-            string header;
-            int sum = 1;
-            double x = 0;
-            double y = 0;
-            double z = 0;
-            double sta;
-            for (int i = 0; i < Station.Count; i++)
+            DataView dvFinal = DvText;
+            //DataView dv = DvText;
+            //DataView dvTunnel = null;
+            List<double> Station = StationText;
+            //Sort_Points(ref dvFinal, ref dv, ref Station, ref dvTunnel);
+            if (dvFinal != null)
             {
-                if (Station[i] > (double)dv[dv.Count - 1][3])
-                    continue;
-                align2.PointLocation(Station[i], 0, ref x, ref y);
-                ii = Station[i].ToString();
+                dvFinal.Sort = "OFF ASC";
+                List<string> txt = new List<string>();
+                string ErrSLG = "";
+                string header;
+                int sum = 1;
+                double x = 0;
+                double y = 0;
+                double z = 0;
+                double sta;
+                //for (int i = 0; i < Station.Count; i++)
+                //{
+                //    if (Station[i] > (double)dv[dv.Count - 1][3])
+                //        continue;
+                //    align2.PointLocation(Station[i], 0, ref x, ref y);
+                //    ii = Station[i].ToString();
+                //    try
+                //    {
+                //        z = surface.FindElevationAtXY(x, y);
+                //    }
+                //    catch
+                //    {
+                //        ErrSLG = ErrSLG + "\n Remove STA = " + ii + " sample line";
+                //    }
+                //}
                 try
                 {
-                    z = surface.FindElevationAtXY(x, y);
+                    for (int i = 0; i < Station.Count; i++)
+                    {
+                        if (Station[i] > (double)dvFinal[dvFinal.Count - 1][3]) continue;
+                        align2.PointLocation(Station[i], 0, ref x, ref y);
+                        ii = Station[i].ToString();
+                        //z = surface.FindElevationAtXY(x, y);
+                        sta = Station[i];
+                        string side = "";
+                        string staform2 = "";
+                        double staform = sta - Math.Floor(sta / 1000) * 1000;
+                        if (staform < 100)
+                            staform2 = "0" + staform.ToString();
+                        else
+                            staform2 = staform.ToString();
+                        header = Convert.ToString(sum) + "," + Convert.ToString(x.ToString("F3")) + "," + Convert.ToString(y.ToString("F3")) + "," + Convert.ToString(z.ToString("F3")) + "," + Convert.ToString(Math.Floor(sta / 1000)) + "+" + staform2;
+                        txt.Add(Convert.ToString(header));
+                        for (int j = 0; j < dvFinal.Count; j++)
+                        {
+                            if ((double)(dvFinal[j][3]) == Station[i])
+                            {
+                                if ((double)(dvFinal[j][4]) < 0)
+                                    side = "L";
+                                else if ((double)(dvFinal[j][4]) > 0)
+                                    side = "R";
+                                sum++;
+                                x = (double)(dvFinal[j][0]);
+                                y = (double)(dvFinal[j][1]);
+                                z = (double)(dvFinal[j][2]);
+                                string OFFELEV = Convert.ToString(sum) + "," + x.ToString("F3") + "," + y.ToString("F3") + "," + z.ToString("F3") + "," + side;
+                                txt.Add(OFFELEV);
+                            }
+                        }
+                    }
+                    string filename;
+                    DialogResult result = new DialogResult();
+                    using (SaveFileDialog filechooser = new SaveFileDialog())
+                    {
+                        filechooser.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+                        filechooser.FilterIndex = 1;
+                        result = filechooser.ShowDialog();
+                        filename = filechooser.FileName;
+                    }
+                    if (result == DialogResult.OK)
+                    {
+                        try
+                        {
+                            FileStream input = new FileStream(filename, FileMode.OpenOrCreate, FileAccess.Write);
+                            filewriter = new StreamWriter(input);
+                            for (int i = 0; i < txt.Count; i++)
+                            {
+                                filewriter.WriteLine(txt[i]);
+                            }
+                            filewriter.Close();
+                        }
+                        catch (IOException)
+                        {
+                            System.Windows.Forms.MessageBox.Show("Error writing to file", "File error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
                 }
                 catch
                 {
-                    ErrSLG = ErrSLG + "\n Remove STA = " + ii + " sample line";
+                    MessageBox.Show("You must remove sample lines which are outside of surface boundries!" + "\n" + ErrSLG, "Outside sample lines", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
-            try
+            else
             {
-                for (int i = 0; i < Station.Count; i++)
-                {
-                    if (Station[i] > (double)dv[dv.Count - 1][3]) continue;
-                    align2.PointLocation(Station[i], 0, ref x, ref y);
-                    ii = Station[i].ToString();
-                    z = surface.FindElevationAtXY(x, y);
-                    sta = Station[i];
-                    string side = "";
-                    string staform2 = "";
-                    double staform = sta - Math.Floor(sta / 1000) * 1000;
-                    if (staform < 100)
-                        staform2 = "0" + staform.ToString();
-                    else
-                        staform2 = staform.ToString();
-                    header = Convert.ToString(sum) + "," + Convert.ToString(x.ToString("F3")) + "," + Convert.ToString(y.ToString("F3")) + "," + Convert.ToString(z.ToString("F3")) + "," + Convert.ToString(Math.Floor(sta / 1000)) + "+" + staform2;
-                    txt.Add(Convert.ToString(header));
-                    for (int j = 0; j < dvFinal.Count; j++)
-                    {
-                        if ((double)(dvFinal[j][3]) == Station[i])
-                        {
-                            if ((double)(dvFinal[j][4]) < 0)
-                                side = "L";
-                            else if ((double)(dvFinal[j][4]) > 0)
-                                side = "R";
-                            sum++;
-                            x = (double)(dvFinal[j][0]);
-                            y = (double)(dvFinal[j][1]);
-                            z = (double)(dvFinal[j][2]);
-                            string OFFELEV = Convert.ToString(sum) + "," + x.ToString("F3") + "," + y.ToString("F3") + "," + z.ToString("F3") + "," + side;
-                            txt.Add(OFFELEV);
-                        }
-                    }
-                }
-                string filename;
-                DialogResult result = new DialogResult();
-                using (SaveFileDialog filechooser = new SaveFileDialog())
-                {
-                    filechooser.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
-                    filechooser.FilterIndex = 1;
-                    result = filechooser.ShowDialog();
-                    filename = filechooser.FileName;
-                }
-                if (result == DialogResult.OK)
-                {
-                    try
-                    {
-                        FileStream input = new FileStream(filename, FileMode.OpenOrCreate, FileAccess.Write);
-                        filewriter = new StreamWriter(input);
-                        for (int i = 0; i < txt.Count; i++)
-                        {
-                            filewriter.WriteLine(txt[i]);
-                        }
-                        filewriter.Close();
-                    }
-                    catch (IOException)
-                    {
-                        System.Windows.Forms.MessageBox.Show("Error writing to file", "File error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-            }
-            catch
-            {
-                MessageBox.Show("You must remove sample lines which are outside of surface boundries!" + "\n" + ErrSLG, "Outside sample lines", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("You must create tunnel sections first!");
             }
         }
 
         private void exitToolStripMenuItem_Click_1(object sender, EventArgs e)
         {
             this.Close();
-        }    
-        
+        }
+
         private void About_ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Sections.AboutCreateSectionFromXYZ win1 = new Sections.AboutCreateSectionFromXYZ();
@@ -1579,9 +1607,9 @@ namespace Sections
                 s++;
             }
             return Po;
-        }  
-        
-        public bool isinnside(Polyline pol,Point3d Point1,Point3d Point2,double rot)
+        }
+
+        public bool isinnside(Polyline pol, Point3d Point1, Point3d Point2, double rot)
         {
             Point2d CentPoint = new Point2d((pol.Bounds.Value.MaxPoint.X + pol.Bounds.Value.MinPoint.X) / 2,
                 (pol.Bounds.Value.MaxPoint.Y + pol.Bounds.Value.MinPoint.Y) / 2);
@@ -1606,7 +1634,7 @@ namespace Sections
 
         private void chksampleline_CheckedChanged(object sender, EventArgs e)
         {
-            if(chksampleline.CheckState == CheckState.Checked)
+            if (chksampleline.CheckState == CheckState.Checked)
             {
                 chkformat.Enabled = false;
                 Tolbox.Enabled = false;
@@ -1655,6 +1683,54 @@ namespace Sections
                 chkwhitoutslg.Enabled = true;
                 chksampleline.Enabled = true;
                 Tolbox.Enabled = true;
+            }
+        }
+
+        private void saveGenericToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DataView dvFinal = DvText;
+            List<double> Station = StationText;
+            if (dvFinal != null)
+            {
+                List<string> txt = new List<string>();
+                int sum = 1;
+                double x = 0;
+                double y = 0;
+                double z = 0;
+                double sta = 0;
+                for (int i = 0; i < dvFinal.Count; i++)
+                {
+                    txt.Add(dvFinal[i][0].ToString() + dvFinal[i][1].ToString() + dvFinal[i][2].ToString() +
+                        dvFinal[i][3].ToString() + dvFinal[i][4].ToString());
+                }
+
+
+                string filename;
+                DialogResult result = new DialogResult();
+                using (SaveFileDialog filechooser = new SaveFileDialog())
+                {
+                    filechooser.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+                    filechooser.FilterIndex = 1;
+                    result = filechooser.ShowDialog();
+                    filename = filechooser.FileName;
+                }
+                if (result == DialogResult.OK)
+                {
+                    try
+                    {
+                        FileStream input = new FileStream(filename, FileMode.OpenOrCreate, FileAccess.Write);
+                        filewriter = new StreamWriter(input);
+                        for (int i = 0; i < txt.Count; i++)
+                        {
+                            filewriter.WriteLine(txt[i]);
+                        }
+                        filewriter.Close();
+                    }
+                    catch (IOException)
+                    {
+                        System.Windows.Forms.MessageBox.Show("Error writing to file", "File error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
             }
         }
     }

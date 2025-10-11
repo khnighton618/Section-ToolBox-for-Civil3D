@@ -338,8 +338,8 @@
             // 
             // groupBox1
             // 
-            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.Controls.Add(this.TXTStaErrorList);
             this.groupBox1.Controls.Add(this.label8);
@@ -587,7 +587,7 @@
         private System.Windows.Forms.ToolStripMenuItem openSelectionFileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveSelectionToAFileToolStripMenuItem;
         private System.Windows.Forms.StatusStrip statusStrip1;
-        private System.Windows.Forms.ToolStripProgressBar ProgBar;       
+        private System.Windows.Forms.ToolStripProgressBar ProgBar;
         private System.Windows.Forms.ToolStripStatusLabel TimeElapseStripStatus;
         private System.Windows.Forms.ToolStripStatusLabel ErrorNOStripStatus;
         private System.Windows.Forms.CheckBox chkMultiple;

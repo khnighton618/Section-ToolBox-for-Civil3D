@@ -23,6 +23,11 @@ using System.Windows.Forms.VisualStyles;
 using PCM = Autodesk.AutoCAD.PlottingServices.PlotConfigManager;
 using System.IO;
 using Sections;
+using System.Drawing.Printing;
+using Microsoft.VisualBasic;
+using System.Windows.Media.Media3D;
+using System.Xml.Linq;
+using OpenMode = Autodesk.AutoCAD.DatabaseServices.OpenMode;
 
 namespace SectionVer2.Other_App.BatchPlot
 {
@@ -30,12 +35,12 @@ namespace SectionVer2.Other_App.BatchPlot
     public partial class Batch_Plot : Form
     {
         [DllImport("accore.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "acedTrans")]
-        static extern int acedTrans (Point3d point, IntPtr fromRb, IntPtr toRb, int disp, out Point3d result);
+        static extern int acedTrans(Point3d point, IntPtr fromRb, IntPtr toRb, int disp, out Point3d result);
         PlotSettingsValidator psv = null;
-        StringCollection devlist = null;        
+        StringCollection devlist = null;
         string blockname = "";
         Document doc = Application.DocumentManager.MdiActiveDocument;
-        Editor ed = Application.DocumentManager.MdiActiveDocument.Editor;        
+        Editor ed = Application.DocumentManager.MdiActiveDocument.Editor;
         Database db = Application.DocumentManager.MdiActiveDocument.Database;
         private static string[,] ScaleValueArray;
         private static string GlbScale = "Scale to Fit";
@@ -185,7 +190,7 @@ namespace SectionVer2.Other_App.BatchPlot
                     }
                 }
                 StdScaleType ScaleType = (StdScaleType)Enum.Parse(typeof(StdScaleType), RealScale, false);
-                if (!checkBoxLandscape.Checked) 
+                if (!checkBoxLandscape.Checked)
                     PltRot = Autodesk.AutoCAD.DatabaseServices.PlotRotation.Degrees000;
                 mpp = new MyPlotParams(null, DeviceName, PaperSize, ctbFile,
                                         checkBoxLineWeight.Checked,
@@ -196,29 +201,39 @@ namespace SectionVer2.Other_App.BatchPlot
                 mpp.TabOption = TabOption;
                 mpp.ApplyStamp = false;
                 mpp.PlotToFile = checkBoxFile.Checked;
-                mpp.PlotFileLocation = db.Filename.Remove(db.Filename.Length-4);
+                mpp.PlotFileLocation = db.Filename.Remove(db.Filename.Length - 4);
                 mpp.Cnt = BlockNO;
-                
+
             }
             return mpp;
         }
 
         public Batch_Plot()
         {
-            InitializeComponent();            
+            InitializeComponent();
             loadDeviceList(ref psv, ref devlist);
             foreach (string device in devlist)
             {
                 LS_PrinterName.Items.Add(device);
             }
-            LS_PrinterName.SelectedIndex = 0;
-            LS_Size.SelectedIndex = 0;
+            if (LS_PrinterName.Items.Contains("pdfFactory Pro.pc3"))
+            {
+                LS_PrinterName.SelectedItem = "pdfFactory Pro.pc3";//.SelectedIndex = 0;
+                LS_Size.SelectedItem = "A4";//.SelectedIndex = 0;
+                comboBoxPlotStyle.SelectedItem = "monochrome.ctb";
+            }
+            else
+            {
+                LS_PrinterName.SelectedIndex = 0;
+                LS_Size.SelectedIndex = 0;
+            }
+
             BlockcountLBL.Text = "0";
             comboBoxScale.Items.Clear();
             comboBoxScale.Items.Clear();
-            textBoxScale.Text = "";    
+            textBoxScale.Text = "";
             LoadPlotProp();
-        }        
+        }
 
         public void LoadPlotProp()
         {
@@ -237,7 +252,7 @@ namespace SectionVer2.Other_App.BatchPlot
                 ScaleValueArray[i, 0] = tempStr;
                 ScaleValueArray[i, 1] = str;
                 ++i;
-                if (string.Compare(tempStr, GlbScale) == 0) 
+                if (string.Compare(tempStr, GlbScale) == 0)
                     tempTest = true;
             }
             comboBoxScale.SelectedIndex = 0;
@@ -255,21 +270,24 @@ namespace SectionVer2.Other_App.BatchPlot
                 comboBoxPlotStyle.Text = GlbctbFile;
                 tempTest = false;
             }
-            else 
+            else
                 comboBoxPlotStyle.Text = comboBoxPlotStyle.Items[0].ToString();
-            comboBoxPlotStyle.SelectedIndex = 0;
+            if (comboBoxPlotStyle.Items.Contains("monochrome.ctb"))
+                comboBoxPlotStyle.SelectedItem = "monochrome.ctb";
+            else
+                comboBoxPlotStyle.SelectedIndex = 0;
         }
 
         public void loadDeviceList(ref PlotSettingsValidator psv, ref StringCollection devlist)
         {
-            
+
             // Assign default return values
             string DeviceName = "", PaperSize = "";
             psv = PlotSettingsValidator.Current;
             // Let's first select the device
             devlist = psv.GetPlotDeviceList();
 
-            
+
         }
 
         public string FormatStandardScale(string str)
@@ -311,7 +329,7 @@ namespace SectionVer2.Other_App.BatchPlot
         }
 
         private void LS_PrinterName_SelectedIndexChanged(object sender, EventArgs e)
-        {  
+        {
             loadDeviceList(ref psv, ref devlist);
             LS_Size.Items.Clear();
             PlotSettings ps = new PlotSettings(true);
@@ -335,36 +353,36 @@ namespace SectionVer2.Other_App.BatchPlot
             }
             LS_Size.SelectedIndex = 0;
         }
-        
+
 
         private void Plot_BTN_Click(object sender, EventArgs e)
         {
             Point2dCollection win = ExtentPoints();
 
             int numsheet = 5;// win.Count/2;
-            WindowPlot( win);
+            WindowPlot(win);
             //this.Close();
-        }        
+        }
 
         public Point2dCollection ExtentPoints()
-        {            
+        {
             Point2dCollection win = new Point2dCollection();
             Point2d po1;
             Point2d po2;
-            using ( Transaction tr = db.TransactionManager.StartTransaction() )
+            using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                var blockTable = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+                var blockTable = (BlockTable)tr.GetObject(db.BlockTableId, Autodesk.AutoCAD.DatabaseServices.OpenMode.ForRead);
                 // open the model space BlockTableRecord
-                var modelSpace = (BlockTableRecord)tr.GetObject(blockTable [BlockTableRecord.ModelSpace], OpenMode.ForRead);
+                var modelSpace = (BlockTableRecord)tr.GetObject(blockTable[BlockTableRecord.ModelSpace], Autodesk.AutoCAD.DatabaseServices.OpenMode.ForRead);
                 // iterate through the model space 
-                foreach ( ObjectId id in modelSpace )
+                foreach (ObjectId id in modelSpace)
                 {
                     // check if the current ObjectId is a block reference one
-                    if ( id.ObjectClass.DxfName == "INSERT" )
+                    if (id.ObjectClass.DxfName == "INSERT")
                     {
                         // open the block reference
-                        var bl = (BlockReference)tr.GetObject(id, OpenMode.ForRead);
-                        if ( bl.Name == blockname )
+                        var bl = (BlockReference)tr.GetObject(id, Autodesk.AutoCAD.DatabaseServices.OpenMode.ForRead);
+                        if (bl.Name == blockname)
                         {
                             po1 = new Point2d(bl.Bounds.Value.MaxPoint.X, bl.Bounds.Value.MaxPoint.Y);
                             po2 = new Point2d(bl.Bounds.Value.MinPoint.X, bl.Bounds.Value.MinPoint.Y);
@@ -396,12 +414,12 @@ namespace SectionVer2.Other_App.BatchPlot
                         var bl = (BlockReference)tr.GetObject(id, OpenMode.ForRead);
                         if (bl.Name == blockname)
                         {
-                            BlockNO++;  
+                            BlockNO++;
                         }
                     }
                 }
                 tr.Commit();
-                
+
             }
             return BlockNO;
         }
@@ -409,8 +427,8 @@ namespace SectionVer2.Other_App.BatchPlot
         private void BlockSelect_BTN_Click(object sender, EventArgs e)
         {
             BlockcountLBL.Text = "0";
-            PromptSelectionResult polsel = ed.GetSelection();           
-            
+            PromptSelectionResult polsel = ed.GetSelection();
+            double scale = 1;
             if (polsel.Status == PromptStatus.Error) return;
             SelectionSet BLockAR = polsel.Value;
             if (BLockAR != null)
@@ -422,198 +440,242 @@ namespace SectionVer2.Other_App.BatchPlot
                     if (bl != null)
                     {
                         blockname = bl.Name;
+                        scale = bl.ScaleFactors.X / 10;
+                        textBoxScale.Text = scale.ToString();
                     }
                     tr.Commit();
                 }
                 BlockcountLBL.Text = Block_NO().ToString();
                 labelBlkName.Text = blockname;
+                RangeTXT.Text = "1-" + Block_NO().ToString();
             }
             else
                 MessageBox.Show("Please Select Block Sample!");
-            
-        }       
 
-        public void WindowPlot (Point2dCollection win)
-        {            
-            string DeviceName = LS_PrinterName.SelectedItem.ToString();
-            string PaperSize = LS_Size.SelectedItem.ToString();
-            int s = 1;
-            for (int i=0; i< win.Count-1; i=i+2 )
-            {
-                Point3d p1 = new Point3d(win [i].X, win [i].Y, 0);
-                Point3d p2 = new Point3d(win [i+1].X, win [i+1].Y, 0);
-
-                // Transform from UCS to DCS
-
-                ResultBuffer rbFrom = new ResultBuffer(new TypedValue(5003, 1)), rbTo = new ResultBuffer(new TypedValue(5003, 2));
-                Point3d firres = new Point3d(0, 0, 0);
-                Point3d secres = new Point3d(0, 0, 0);
-
-                // Transform the first point...
-                acedTrans(p2, rbFrom.UnmanagedObject, rbTo.UnmanagedObject, 0, out firres);
-
-                // ... and the second
-                acedTrans(p1, rbFrom.UnmanagedObject, rbTo.UnmanagedObject, 0, out secres);
-
-                // We can safely drop the Z-coord at this stage
-                
-                Extents2d window = new Extents2d(firres[0], firres[1], secres[0], secres[1]);
-                
-                plotset(window, DeviceName, PaperSize, s);
-                s++;
-            }
         }
 
-        public void plotset(Extents2d window, string DeviceName, string PaperSize, int no)
+        public void WindowPlot(Point2dCollection win)
+        {
+            string DeviceName = LS_PrinterName.SelectedItem.ToString();
+            string PaperSize = LS_Size.SelectedItem.ToString();
+
+            int s = 1;
+            plotset(win, DeviceName, PaperSize);
+        }
+        public Extents2d extent(Point2dCollection win, int no)
+        {
+            Point3d p1 = new Point3d(win[no].X, win[no].Y, 0);
+            Point3d p2 = new Point3d(win[no + 1].X, win[no + 1].Y, 0);
+
+            // Transform from UCS to DCS
+
+            ResultBuffer rbFrom = new ResultBuffer(new TypedValue(5003, 1)), rbTo = new ResultBuffer(new TypedValue(5003, 2));
+            Point3d firres = new Point3d(0, 0, 0);
+            Point3d secres = new Point3d(0, 0, 0);
+
+            // Transform the first point...
+            acedTrans(p2, rbFrom.UnmanagedObject, rbTo.UnmanagedObject, 0, out firres);
+
+            // ... and the second
+            acedTrans(p1, rbFrom.UnmanagedObject, rbTo.UnmanagedObject, 0, out secres);
+
+            // We can safely drop the Z-coord at this stage
+
+            Extents2d window = new Extents2d(firres[0], firres[1], secres[0], secres[1]);
+            return window;
+
+        }
+        public void plotset(Point2dCollection win, string DeviceName, string PaperSize)
         {
             MyPlotParams mpp = ApplySettings();
-            
-            Transaction tr = db.TransactionManager.StartTransaction();
-            using (tr)
+            int numsheet = 1;
+            int allsheet = win.Count / 2;
+
+            string[] str = RangeTXT.Text.Split(new char[] { '-', ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
+            int start = Convert.ToInt32(str[0]);
+            int end = Convert.ToInt32(str[1]);
+            allsheet = end - start + 1;
+            try
             {
-
-                // We'll be plotting the current layout
-                object backgroundPlot = Application.GetSystemVariable("BACKGROUNDPLOT");
-                Application.SetSystemVariable("BACKGROUNDPLOT", 0);
-                BlockTableRecord btr = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForRead);
-
-                Layout lo = (Layout)tr.GetObject(btr.LayoutId, OpenMode.ForRead);
-
-                // We need a PlotInfo object
-                // linked to the layout
-
-                PlotInfo pi = new PlotInfo();
-                pi.Layout = btr.LayoutId;
-
-                // We need a PlotSettings object
-                // based on the layout settings
-                // which we then customize
-
-                PlotSettings ps = new PlotSettings(lo.ModelType);
-                ps.CopyFrom(lo);
-
-                // The PlotSettingsValidator helps
-                // create a valid PlotSettings object
-
-                PlotSettingsValidator psv = PlotSettingsValidator.Current;
-
-                // We'll plot the extents, centered and
-                // scaled to fit
-
-                if (textBoxScale.Text == "0")
-                    MessageBox.Show("Scale must not be zero!");
-                else
+                Transaction tr = db.TransactionManager.StartTransaction();
+                using (tr)
                 {
-                    if (textBoxScale.Text != "")
+
+                    // We'll be plotting the current layout
+                    object backgroundPlot = Application.GetSystemVariable("BACKGROUNDPLOT");
+                    Application.SetSystemVariable("BACKGROUNDPLOT", 0);
+                    BlockTableRecord btr = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForRead);
+
+                    Layout lo = (Layout)tr.GetObject(btr.LayoutId, OpenMode.ForRead);
+
+                    // We need a PlotInfo object
+                    // linked to the layout
+
+                    PlotInfo pi = new PlotInfo();
+                    pi.Layout = btr.LayoutId;
+
+                    // We need a PlotSettings object
+                    // based on the layout settings
+                    // which we then customize                
+
+                    // We need to link the PlotInfo to the
+                    // PlotSettings and then validate it
+                    //
+                    // A PlotEngine does the actual plotting
+                    // (can also create one for Preview)
+
+                    if (PlotFactory.ProcessPlotState == ProcessPlotState.NotPlotting)
                     {
-                        CustomScale type = new CustomScale(1, Convert.ToDouble(textBoxScale.Text));
-                        //psv.SetUseStandardScale(ps, false);
-                        psv.SetCustomPrintScale(ps, type);
+                        PlotEngine pe = PlotFactory.CreatePublishEngine();
+                        using (pe)
+                        {
+
+                            // Create a Progress Dialog to provide info
+                            // and allow thej user to cancel
+
+                            PlotProgressDialog ppd = new PlotProgressDialog(false, allsheet, true);
+                            if (ppd.SheetCancelStatus != SheetCancelStatus.CanceledByCancelAllButton)
+                            {
+                                using (ppd)
+                                {
+
+                                    for (int i = start * 2 - 2; i < end * 2; i = i + 2)
+                                    {
+
+                                        Extents2d window = extent(win, i);
+                                        #region ps,psv,pi,piv
+                                        PlotSettings ps = new PlotSettings(lo.ModelType);
+                                        ps.CopyFrom(lo);
+
+                                        // The PlotSettingsValidator helps
+                                        // create a valid PlotSettings object
+
+                                        PlotSettingsValidator psv = PlotSettingsValidator.Current;
+
+                                        // We'll plot the extents, centered and
+                                        // scaled to fit
+
+                                        if (textBoxScale.Text == "0")
+                                            MessageBox.Show("Scale must not be zero!");
+                                        else
+                                        {
+                                            if (textBoxScale.Text != "")
+                                            {
+                                                CustomScale type = new CustomScale(1, Convert.ToDouble(textBoxScale.Text));
+                                                //psv.SetUseStandardScale(ps, false);
+                                                psv.SetCustomPrintScale(ps, type);
+                                            }
+                                            else
+                                            {
+                                                psv.SetUseStandardScale(ps, true);
+                                                psv.SetStdScaleType(ps, mpp.AcScaleType);
+                                            }
+                                        }
+                                        psv.SetPlotWindowArea(ps, window);
+                                        psv.SetPlotType(ps, Autodesk.AutoCAD.DatabaseServices.PlotType.Window);
+                                        //psv.SetCustomPrintScale(ps,CustomScale type)
+                                        psv.SetPlotCentered(ps, true);
+                                        psv.SetCurrentStyleSheet(ps, mpp.ctbFile);
+                                        // We'll use the standard DWF PC3, as
+                                        // for today we're just plotting to file
+                                        if (checkBoxScaleLinew.Checked)
+                                            ps.ScaleLineweights = checkBoxScaleLinew.Checked;
+                                        else
+                                            ps.PrintLineweights = mpp.ScaleLineweight;
+                                        psv.SetPlotRotation(ps, mpp.AcPlotRotation);
+                                        psv.SetPlotConfigurationName(ps, mpp.Device, mpp.Paper);
+                                        psv.SetPlotRotation(ps, mpp.AcPlotRotation);
+                                        pi.OverrideSettings = ps;
+                                        PlotInfoValidator piv = new PlotInfoValidator();
+                                        piv.MediaMatchingPolicy = MatchingPolicy.MatchEnabled;
+                                        piv.Validate(pi);
+                                        #endregion
+                                        if (numsheet == 1)
+                                        {
+                                            ppd.set_PlotMsgString(PlotMessageIndex.DialogTitle, "Custom Plot Progress");
+                                            ppd.set_PlotMsgString(PlotMessageIndex.CancelJobButtonMessage, "Cancel Job");
+                                            ppd.set_PlotMsgString(PlotMessageIndex.CancelSheetButtonMessage, "Cancel Sheet");
+                                            ppd.set_PlotMsgString(PlotMessageIndex.SheetSetProgressCaption, "Sheet Set Progress");
+                                            ppd.set_PlotMsgString(PlotMessageIndex.SheetProgressCaption, "Sheet Progress");
+                                            ppd.LowerPlotProgressRange = 0;
+                                            ppd.UpperPlotProgressRange = 100;
+                                            ppd.PlotProgressPos = 0;
+                                            // Let's start the plot, at last
+                                            ppd.OnBeginPlot();
+                                            ppd.IsVisible = true;
+                                            pe.BeginPlot(ppd, null);
+                                            // We'll be plotting a single document
+
+                                            pe.BeginDocument(pi, doc.Name, null, 1, mpp.PlotToFile, mpp.PlotFileLocation + "-" + allsheet.ToString() + ".pdf");
+                                        }
+
+                                        ppd.StatusMsgString = "Plotting " + doc.Name.Substring(doc.Name.LastIndexOf("\\") + 1) + " - sheet " + numsheet.ToString() + " of " + allsheet.ToString();
+                                        ppd.set_PlotMsgString(PlotMessageIndex.SheetSetProgressCaption, "Sheet Set Progress: " + numsheet.ToString() + " of " + allsheet.ToString());
+                                        ppd.OnBeginSheet();
+                                        ppd.LowerSheetProgressRange = 0;
+                                        ppd.UpperSheetProgressRange = 100;
+                                        ppd.SheetProgressPos = 0;
+                                        PlotPageInfo ppi = new PlotPageInfo();
+                                        if (ppd.IsPlotCancelled)
+                                            break;
+                                        if (ppd.IsSheetCancelled)
+                                            continue;
+                                        pe.BeginPage(ppi, pi, (numsheet == allsheet), null);
+                                        ppd.SheetProgressPos = 25;
+                                        pe.BeginGenerateGraphics(null);
+                                        ppd.SheetProgressPos = 50;
+
+                                        pe.EndGenerateGraphics(null);
+                                        // Finish the sheet
+                                        PreviewEndPlotInfo pepi = new PreviewEndPlotInfo();
+                                        ppd.SheetProgressPos = 75;
+                                        pe.EndPage(pepi);
+                                        //pe.EndPage(null);
+                                        ppd.SheetProgressPos = 100;
+                                        ppd.OnEndSheet();
+                                        numsheet++;
+                                        ppd.PlotProgressPos = (numsheet * 100) / allsheet;
+                                    }
+                                    // Finish the document
+
+                                    pe.EndDocument(null);
+
+                                    // And finish the plot
+
+                                    ppd.PlotProgressPos = 100;
+                                    ppd.OnEndPlot();
+                                    pe.EndPlot(null);
+                                }
+                            }
+
+                        }
                     }
                     else
                     {
-                        psv.SetUseStandardScale(ps, true);
-                        psv.SetStdScaleType(ps, mpp.AcScaleType);
+                        ed.WriteMessage("\nAnother plot is in progress.");
                     }
+                    tr.Commit();
                 }
-                
-
-                psv.SetPlotWindowArea(ps, window);
-                psv.SetPlotType(ps, Autodesk.AutoCAD.DatabaseServices.PlotType.Window);
-                
-                
-                //psv.SetCustomPrintScale(ps,CustomScale type)
-                psv.SetPlotCentered(ps, true);
-                psv.SetCurrentStyleSheet(ps, mpp.ctbFile);
-                // We'll use the standard DWF PC3, as
-                // for today we're just plotting to file
-                ps.ScaleLineweights = mpp.ScaleLineweight;
-                psv.SetPlotRotation(ps, mpp.AcPlotRotation);
-                psv.SetPlotConfigurationName(ps, mpp.Device, mpp.Paper);
-                psv.SetPlotRotation(ps, mpp.AcPlotRotation);
-
-                // We need to link the PlotInfo to the
-                // PlotSettings and then validate it
-
-                pi.OverrideSettings = ps;
-                PlotInfoValidator piv = new PlotInfoValidator();
-                piv.MediaMatchingPolicy = MatchingPolicy.MatchEnabled;
-                piv.Validate(pi);
-
-                // A PlotEngine does the actual plotting
-
-                // (can also create one for Preview)
-
-                if (PlotFactory.ProcessPlotState == ProcessPlotState.NotPlotting)
-                {
-                    PlotEngine pe = PlotFactory.CreatePublishEngine();
-                    using (pe)
-                    {
-
-                        // Create a Progress Dialog to provide info
-                        // and allow thej user to cancel
-
-                        PlotProgressDialog ppd = new PlotProgressDialog(false, 1, true);
-
-                        using (ppd)
-                        {
-                            ppd.set_PlotMsgString(PlotMessageIndex.DialogTitle, "Custom Plot Progress");
-                            ppd.set_PlotMsgString(PlotMessageIndex.CancelJobButtonMessage, "Cancel Job");
-                            ppd.set_PlotMsgString(PlotMessageIndex.CancelSheetButtonMessage, "Cancel Sheet");
-                            ppd.set_PlotMsgString(PlotMessageIndex.SheetSetProgressCaption, "Sheet Set Progress");
-                            ppd.set_PlotMsgString(PlotMessageIndex.SheetProgressCaption, "Sheet Progress");
-                            ppd.LowerPlotProgressRange = 0;
-                            ppd.UpperPlotProgressRange = 100;
-                            ppd.PlotProgressPos = 0;
-
-                            // Let's start the plot, at last
-
-                            ppd.OnBeginPlot();
-                            ppd.IsVisible = true;
-                            pe.BeginPlot(ppd, null);
-
-                            // We'll be plotting a single document
-                            
-                            pe.BeginDocument(pi, doc.Name, null, 1, mpp.PlotToFile, mpp.PlotFileLocation+"-"+no.ToString()+".pdf");
-
-                            // Which contains a single sheet
-
-                            ppd.OnBeginSheet();
-                            ppd.LowerSheetProgressRange = 0;
-                            ppd.UpperSheetProgressRange = 100;
-                            ppd.SheetProgressPos = 0;
-                            PlotPageInfo ppi = new PlotPageInfo();
-                            pe.BeginPage(ppi, pi, true, null);
-                            pe.BeginGenerateGraphics(null);
-                            pe.EndGenerateGraphics(null);
-
-                            // Finish the sheet
-
-                            pe.EndPage(null);
-                            ppd.SheetProgressPos = 100;
-                            ppd.OnEndSheet();
-
-                            // Finish the document
-
-                            pe.EndDocument(null);
-
-                            // And finish the plot
-
-                            ppd.PlotProgressPos = 100;
-                            ppd.OnEndPlot();
-                            pe.EndPlot(null);
-                            ppd.Destroy();
-                            pe.Destroy();
-                        }
-                    }
-                }
-                else
-                {
-                    ed.WriteMessage("\nAnother plot is in progress.");
-                }
-                tr.Commit();
             }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage("\n" + ex.Message);
+            }
+
         }
-        
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBox1.Checked == false)
+            {
+                RangeTXT.Enabled = true;
+            }
+            else
+            {
+                RangeTXT.Enabled = false;
+                RangeTXT.Text = "1-" + Block_NO().ToString();
+            }
+
+        }
     }
 }

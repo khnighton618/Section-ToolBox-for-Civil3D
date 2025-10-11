@@ -57,6 +57,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.Tolbox = new System.Windows.Forms.TextBox();
             this.chkwhitoutslg = new System.Windows.Forms.CheckBox();
+            this.saveGenericToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -91,7 +92,7 @@
             // TimeElapseStripStatus
             // 
             this.TimeElapseStripStatus.Name = "TimeElapseStripStatus";
-            this.TimeElapseStripStatus.Size = new System.Drawing.Size(125, 17);
+            this.TimeElapseStripStatus.Size = new System.Drawing.Size(124, 17);
             this.TimeElapseStripStatus.Text = "Elapsed Time: 00:00:00";
             // 
             // راهنماToolStripMenuItem
@@ -104,21 +105,21 @@
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click_1);
             // 
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
-            this.saveToolStripMenuItem.Text = "Save";
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
+            this.saveToolStripMenuItem.Text = "Save (Total Station Format)";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click_1);
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(103, 22);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(215, 22);
             this.toolStripMenuItem1.Text = "Open";
             this.toolStripMenuItem1.Click += new System.EventHandler(this.openToolStripMenuItem_Click_1);
             // 
@@ -126,6 +127,7 @@
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItem1,
+            this.saveGenericToolStripMenuItem,
             this.saveToolStripMenuItem,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
@@ -164,7 +166,7 @@
             // 
             // LS_SLG
             // 
-            this.LS_SLG.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.LS_SLG.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
             | System.Windows.Forms.AnchorStyles.Left)));
             this.LS_SLG.FormattingEnabled = true;
             this.LS_SLG.Location = new System.Drawing.Point(5, 189);
@@ -271,8 +273,8 @@
             // 
             // SectionFromFile_TxtBox
             // 
-            this.SectionFromFile_TxtBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.SectionFromFile_TxtBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.SectionFromFile_TxtBox.BackColor = System.Drawing.SystemColors.Window;
             this.SectionFromFile_TxtBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(178)));
@@ -333,6 +335,13 @@
             this.chkwhitoutslg.UseVisualStyleBackColor = true;
             this.chkwhitoutslg.CheckedChanged += new System.EventHandler(this.chkwhitoutslg_CheckedChanged);
             // 
+            // saveGenericToolStripMenuItem
+            // 
+            this.saveGenericToolStripMenuItem.Name = "saveGenericToolStripMenuItem";
+            this.saveGenericToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
+            this.saveGenericToolStripMenuItem.Text = "Save (XYZ,Sta,Off)";
+            this.saveGenericToolStripMenuItem.Click += new System.EventHandler(this.saveGenericToolStripMenuItem_Click);
+            // 
             // CreateTunnel
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -361,7 +370,7 @@
             this.Controls.Add(this.LS_SLG);
             this.MinimumSize = new System.Drawing.Size(515, 335);
             this.Name = "CreateTunnel";
-            this.Text = "CreateTunnel";
+            this.Text = "CreateTunnel Ver1.1";
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
             this.menuStrip1.ResumeLayout(false);
@@ -402,5 +411,6 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox Tolbox;
         private System.Windows.Forms.CheckBox chkwhitoutslg;
+        private System.Windows.Forms.ToolStripMenuItem saveGenericToolStripMenuItem;
     }
 }

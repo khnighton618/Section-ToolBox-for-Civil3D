@@ -29,8 +29,8 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             this.DVG1 = new System.Windows.Forms.DataGridView();
             this.SectionName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Station = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -84,6 +84,8 @@
             this.MaxZBox = new System.Windows.Forms.TextBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
+            this.chk1 = new System.Windows.Forms.CheckBox();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.DVG1)).BeginInit();
             this.contextMenuStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
@@ -99,9 +101,9 @@
             this.DVG1.AllowUserToDeleteRows = false;
             this.DVG1.AllowUserToOrderColumns = true;
             this.DVG1.AllowUserToResizeRows = false;
-            dataGridViewCellStyle1.Format = "N3";
-            dataGridViewCellStyle1.NullValue = null;
-            this.DVG1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle3.Format = "N3";
+            dataGridViewCellStyle3.NullValue = null;
+            this.DVG1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle3;
             this.DVG1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
             this.DVG1.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
@@ -117,16 +119,16 @@
             this.LeftOffset,
             this.RightOffset});
             this.DVG1.ContextMenuStrip = this.contextMenuStrip1;
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle2.Format = "N3";
-            dataGridViewCellStyle2.NullValue = null;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.DVG1.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle4.Format = "N3";
+            dataGridViewCellStyle4.NullValue = null;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.DVG1.DefaultCellStyle = dataGridViewCellStyle4;
             this.DVG1.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
             this.DVG1.Location = new System.Drawing.Point(12, 187);
             this.DVG1.Name = "DVG1";
@@ -321,7 +323,7 @@
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
             this.openToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.openToolStripMenuItem.Text = "Open";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
@@ -329,14 +331,14 @@
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
             this.saveToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.saveToolStripMenuItem.Text = "Save";
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
             this.exitToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.F4)));
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -486,7 +488,7 @@
             // TimeElapseStripStatus
             // 
             this.TimeElapseStripStatus.Name = "TimeElapseStripStatus";
-            this.TimeElapseStripStatus.Size = new System.Drawing.Size(124, 17);
+            this.TimeElapseStripStatus.Size = new System.Drawing.Size(125, 17);
             this.TimeElapseStripStatus.Text = "Elapsed Time: 00:00:00";
             // 
             // ErrorNOStripStatus
@@ -566,6 +568,7 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.chk1);
             this.groupBox2.Controls.Add(this.MinMaxBTN);
             this.groupBox2.Controls.Add(this.label13);
             this.groupBox2.Controls.Add(this.label14);
@@ -589,6 +592,17 @@
             this.propertyGrid1.Size = new System.Drawing.Size(229, 384);
             this.propertyGrid1.TabIndex = 32;
             // 
+            // chk1
+            // 
+            this.chk1.AutoSize = true;
+            this.chk1.Location = new System.Drawing.Point(277, 20);
+            this.chk1.Name = "chk1";
+            this.chk1.Size = new System.Drawing.Size(81, 17);
+            this.chk1.TabIndex = 30;
+            this.chk1.Text = "Intersection";
+            this.toolTip1.SetToolTip(this.chk1, "If there are more than two corridor or an interstion, check this box\r\n");
+            this.chk1.UseVisualStyleBackColor = true;
+            // 
             // SectionViewEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -611,7 +625,7 @@
             this.MinimizeBox = false;
             this.MinimumSize = new System.Drawing.Size(840, 486);
             this.Name = "SectionViewEditor";
-            this.Text = "SectionViewEditor Ver 1.1";
+            this.Text = "SectionViewEditor Ver 1.2";
             ((System.ComponentModel.ISupportInitialize)(this.DVG1)).EndInit();
             this.contextMenuStrip1.ResumeLayout(false);
             this.menuStrip1.ResumeLayout(false);
@@ -682,5 +696,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn LeftOffset;
         private System.Windows.Forms.DataGridViewTextBoxColumn RightOffset;
         private System.Windows.Forms.PropertyGrid propertyGrid1;
+        private System.Windows.Forms.CheckBox chk1;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }

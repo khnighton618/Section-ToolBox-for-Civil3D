@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CreateSectionFromFile));
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -76,7 +75,7 @@
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
             this.openToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.openToolStripMenuItem.Text = "Open";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
@@ -84,7 +83,7 @@
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
             this.exitToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.F4)));
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -97,10 +96,10 @@
             // 
             // Select_Alignment_BTN
             // 
-            this.Select_Alignment_BTN.Image = ((System.Drawing.Image)(resources.GetObject("Select_Alignment_BTN.Image")));
-            this.Select_Alignment_BTN.Location = new System.Drawing.Point(269, 48);
+            this.Select_Alignment_BTN.Image = global::SectionToolBox.Properties.Resources.Untitled_5;
+            this.Select_Alignment_BTN.Location = new System.Drawing.Point(269, 45);
             this.Select_Alignment_BTN.Name = "Select_Alignment_BTN";
-            this.Select_Alignment_BTN.Size = new System.Drawing.Size(25, 21);
+            this.Select_Alignment_BTN.Size = new System.Drawing.Size(25, 25);
             this.Select_Alignment_BTN.TabIndex = 2;
             this.Select_Alignment_BTN.UseVisualStyleBackColor = true;
             this.Select_Alignment_BTN.Click += new System.EventHandler(this.selalgbtn_Click);
@@ -200,7 +199,7 @@
             // TimeElapseStripStatus
             // 
             this.TimeElapseStripStatus.Name = "TimeElapseStripStatus";
-            this.TimeElapseStripStatus.Size = new System.Drawing.Size(124, 17);
+            this.TimeElapseStripStatus.Size = new System.Drawing.Size(125, 17);
             this.TimeElapseStripStatus.Text = "Elapsed Time: 00:00:00";
             // 
             // ErrorNOStripStatus

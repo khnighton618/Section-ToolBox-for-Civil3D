@@ -117,31 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="menuStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>253, 20</value>
-  </metadata>
-  <metadata name="statusStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>137, 20</value>
-  </metadata>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        AAABAAEAICAQAAAAAADoAgAAFgAAACgAAAAgAAAAQAAAAAEABAAAAAAAgAIAAAAAAAAAAAAAAAAAAAAA
-        AAAAAAAAAACAAACAAAAAgIAAgAAAAIAAgACAgAAAgICAAMDAwAAAAP8AAP8AAAD//wD/AAAA/wD/AP//
-        AAD///8AAAAAAAAAAAC6q6qqqqqqqgAAAAAAAAALqrqru7u7u7sAAAAAAAAAuququqqqqqqqAAAAAAAA
-        C6q6q6qqqqqqqgAAAAAAALqrqrqru7u7u7sAAAAAAAuququqsRERERERAAAAAAC6q6q6qxEREREREQAA
-        AAALqrqrqrB+cREREREAAAAAuququqsH7ucRERERAAAAC6q6q6qwfu7ncREREQAAALqrqrqrB+7uAHcR
-        EREAAAuququqsH7u7gB+cRERAAC6q3REREfu7ncAd3cREQALqrp3RPREfuAAAAAHcREAuquqfnRPREfw
-        AAAADucRC6q6qn7nRPREf/8Af+7ucXRERER+7nREREfvAH7u7ucHRE9ER+7nREREfwDu7u7uAHRE9ER+
-        7nRPREf+7u7u7gAHRE9ER+7nRPREfu7u7u4AAHRERER+7nRPREfu7u7uAAAHRERER+7nREREfu7u7gAA
-        AHRE9ER+7nREREfu7u4AAAAHRE9ER+7nRPREfu7uALuwAHS09ER+7nRPREfu7gsACwAHtERER+7nRPRE
-        fu6wAAsLu7tERER+7nREREfnsAu7CwC3RE9ER+7nREREcLAAAACwsHRE9ER+5wAAAACwAAsAsLAHRE9E
-        R+cAAAAACwALAAuwAHRERER3AAAAAAC7sAAAsAAHRERERwAAAAD//wAA//4AAP/8AAD/+AAA//AAAP/g
-        AAD/wAAA/4AQAP8AIAD+AEAA/ACAAPgBAADwAAAA4AAAAMAAAACAAAAAAAAAAIAAAADAAAAA4AAAAPAA
-        AAD4AAAA/AAAAP4AAADHAAAAu4AAAHoAAABiwAABf1AA/3tYAP+7nAD/x94A/w==
-</value>
+  <data name="String1" xml:space="preserve">
+    <value />
   </data>
 </root>

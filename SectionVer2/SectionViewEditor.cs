@@ -12,6 +12,7 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.Civil.ApplicationServices;
 using Autodesk.Civil.DatabaseServices;
 using System.Drawing;
+using System.Windows.Forms.VisualStyles;
 
 namespace Sections
 {
@@ -41,11 +42,11 @@ namespace Sections
             {
                 try
                 {
-                    
+
                     foreach (ObjectId objId in civildoc.GetAlignmentIds())
                     {
 
-                        Alignment al = trans.GetObject(objId, OpenMode.ForWrite) as Alignment;                        
+                        Alignment al = trans.GetObject(objId, OpenMode.ForWrite) as Alignment;
                         LS_Align.Items.Add(al.Name);
                     }
                     LS_Align.SelectedIndex = 0;
@@ -67,12 +68,12 @@ namespace Sections
             LS_SLG.Items.Clear();
             LS_SVG.Items.Clear();
             tb1.Clear();
-            
+
             using (Transaction trans = db.TransactionManager.StartTransaction())
             {
                 try
                 {
-                    
+
                     foreach (ObjectId algid in civildoc.GetAlignmentIds())
                     {
                         Alignment alg = trans.GetObject(algid, OpenMode.ForWrite) as Alignment;
@@ -80,23 +81,23 @@ namespace Sections
                     }
                     foreach (ObjectId slgID in align.GetSampleLineGroupIds())
                     {
-                         slg = trans.GetObject(slgID, OpenMode.ForWrite) as SampleLineGroup;
-                        LS_SLG.Items.Add(slg.Name);                        
+                        slg = trans.GetObject(slgID, OpenMode.ForWrite) as SampleLineGroup;
+                        LS_SLG.Items.Add(slg.Name);
                     }
                     LS_SLG.SelectedIndex = 0;
-                    
-                    for (int i=0;i< slg.SectionViewGroups.Count;i++)
-                    {                       
+
+                    for (int i = 0; i < slg.SectionViewGroups.Count; i++)
+                    {
                         LS_SVG.Items.Add(slg.SectionViewGroups[i].Name);
                     }
                     LS_SVG.SelectedIndex = 0;
-                    
+
 
 
 
                 }
                 catch (System.Exception ex)
-                {                    
+                {
                     ed.WriteMessage("\n" + ex.Message);
                     ErrorNOStripStatus.Text = "Errors: " + ex.Message;
                 }
@@ -128,13 +129,13 @@ namespace Sections
                 col = 0;
             }
 
-        }       
+        }
 
         private void DVG1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
             DataView dv1 = new DataView(tb1);
             SectionView sec = null;
-            if(DVG1.SelectedCells.Count!=0)
+            if (DVG1.SelectedCells.Count != 0)
             {
                 int col = DVG1.CurrentCell.ColumnIndex;
                 int row = DVG1.CurrentCell.RowIndex;
@@ -146,7 +147,7 @@ namespace Sections
                     try
                     {
                         SampleLine osam = trans.GetObject(slg.GetSampleLineIds()[row], OpenMode.ForWrite) as SampleLine;
-                        
+
                         sec = trans.GetObject(osam.GetSectionViewIds()[0], OpenMode.ForWrite) as SectionView;
                         sec.IsOffsetRangeAutomatic = false;
                         sec.IsElevationRangeAutomatic = false;
@@ -169,7 +170,7 @@ namespace Sections
                 }
 
             }
-            
+
         }
 
         private void DrawBTN_Click(object sender, EventArgs e)
@@ -208,7 +209,7 @@ namespace Sections
                     x0 = sv.Location.X;
                     y0 = sv.Location.Y;
                     int NO = 0;
-                    for (int i = 0; i < slg.GetSampleLineIds().Count-1; i++)
+                    for (int i = 0; i < slg.GetSampleLineIds().Count - 1; i++)
                     {
                         if (NO >= slg.GetSampleLineIds().Count) break;
                         for (int j = 0; j < row; j++)
@@ -224,7 +225,7 @@ namespace Sections
                             {
                                 continue;
                             }
-                            
+
                             //maxX.Add(x0 + i * (sv.OffsetRight - sv.OffsetLeft + b + d));
                             //maxY.Add(y0 + j * (sv.ElevationMax - sv.ElevationMin + a + c + h));
                             //if (tb.Rows.Count < (row * col))
@@ -233,9 +234,9 @@ namespace Sections
                             //{
                             //    sp = Convert.ToDouble(TXTSpace.Text);
                             //}
-                            if(chkbox.CheckState == CheckState.Unchecked)
+                            if (chkbox.CheckState == CheckState.Unchecked)
                             {
-                                x = x0 + i * (sv.OffsetRight - sv.OffsetLeft + b + d) + sp* (tb.Rows.Count / (row * col));
+                                x = x0 + i * (sv.OffsetRight - sv.OffsetLeft + b + d) + sp * (tb.Rows.Count / (row * col));
                                 y = y0 + j * (sv.ElevationMax - sv.ElevationMin + a + c + h);
                             }
                             else
@@ -249,7 +250,7 @@ namespace Sections
                             tb.Rows.Add(x, y);
                             NO++;
                         }
-                        
+
                     }
                     DataView dv = new DataView(tb);
                     double z = 0;
@@ -262,9 +263,9 @@ namespace Sections
                         sv = trans.GetObject(osam.GetSectionViewIds()[idsvg], OpenMode.ForWrite) as SectionView;
                         SectionOverride overrideObj = sv.GraphOverrides[0];
                         overrideObj.Draw = true;
-                        x = (double)dv[s][0]-sv.Location.X;
-                        y = (double)dv[s][1]-sv.Location.Y;
-                        Vector3d v = new Vector3d(x, y,0);
+                        x = (double)dv[s][0] - sv.Location.X;
+                        y = (double)dv[s][1] - sv.Location.Y;
+                        Vector3d v = new Vector3d(x, y, 0);
                         Matrix3d m3d = Matrix3d.Displacement(v);
                         //m3d.
                         sv.TransformBy(m3d);
@@ -291,7 +292,7 @@ namespace Sections
                 try
                 {
                     int index = 0;
-                    foreach(int i in LS_SLG.Items)
+                    foreach (int i in LS_SLG.Items)
                     {
                         if (slg.Name == LS_SLG.Items[i].ToString()) break;
                         index++;
@@ -355,7 +356,7 @@ namespace Sections
                     foreach (ObjectId osamID in slg.GetSampleLineIds())
                     {
                         SampleLine osam = trans.GetObject(osamID, OpenMode.ForWrite) as SampleLine;
-                        
+
                         try
                         {
                             secvg = trans.GetObject(osam.GetSectionViewIds()[idsvg], OpenMode.ForWrite) as SectionView;
@@ -418,7 +419,7 @@ namespace Sections
 
 
                     SectionView secvg = null;
-
+              
                     List<double> minz = new List<double>();
                     List<double> maxz = new List<double>();
                     foreach (ObjectId osamID in slg.GetSampleLineIds())
@@ -429,6 +430,7 @@ namespace Sections
                             try
                             {
                                 Autodesk.Civil.DatabaseServices.Section sec = trans.GetObject(osid, OpenMode.ForWrite) as Autodesk.Civil.DatabaseServices.Section;
+                               
                                 minz.Add(sec.MinmumElevation);
                                 maxz.Add(sec.MaximumElevation);
                             }
@@ -452,16 +454,20 @@ namespace Sections
                         double maxztex = Convert.ToDouble(MaxZBox.Text);
                         SectionOverride overrideObj = secvg.GraphOverrides[0];
                         overrideObj.Draw = true;
-                        DVG1.Rows.Add(secvg.Name, osam.Station, Math.Round(minz[0]) - minztex, Math.Round(maxz[maxz.Count - 1]) + maxztex, secvg.OffsetLeft, secvg.OffsetRight);
-                        tb1.Rows.Add(secvg.Name, osam.Station, Math.Round(minz[0]) - minztex, Math.Round(maxz[maxz.Count - 1]) + maxztex, secvg.OffsetLeft, secvg.OffsetRight);
+                        int minIndex = 0;                       
+                        if (chk1.Checked == true)
+                            minIndex = minz.Count - 1;
+                        DVG1.Rows.Add(secvg.Name, osam.Station, Math.Round(minz[minIndex]) - minztex, Math.Round(maxz[maxz.Count - 1]) + maxztex, secvg.OffsetLeft, secvg.OffsetRight);
+                        tb1.Rows.Add(secvg.Name, osam.Station, Math.Round(minz[minIndex]) - minztex, Math.Round(maxz[maxz.Count - 1]) + maxztex, secvg.OffsetLeft, secvg.OffsetRight);
                         if (secvg.IsElevationRangeAutomatic)
                             secvg.IsElevationRangeAutomatic = false;
-                        secvg.ElevationMin = Math.Round(minz[0]) - minztex;
+                        secvg.ElevationMin = Math.Round(minz[minIndex]) - minztex;
                         secvg.ElevationMax = Math.Round(maxz[maxz.Count - 1]) + maxztex;
                         minz.Clear();
                         maxz.Clear();
                         progbarID++;
                         ProgBar.Value = progbarID;
+                        
                     }
                 }
                 catch (System.Exception ex)
@@ -481,10 +487,10 @@ namespace Sections
             try
             {
                 string s = Clipboard.GetText();
-                char[] delim = { '\n',',','\t','\r' };
+                char[] delim = { '\n', ',', '\t', '\r' };
                 string[] lines = s.Split(delim);
                 int ss = 0;
-                for (int i= 0; i < DVG1.RowCount; i++)
+                for (int i = 0; i < DVG1.RowCount; i++)
                 {
                     DVG1[2, i].Value = lines[ss];
                     DVG1[3, i].Value = lines[ss + 1];
@@ -492,7 +498,7 @@ namespace Sections
                     DVG1[5, i].Value = lines[ss + 3];
                     ss = ss + 5;
                 }
-                
+
                 SectionView sec = null;
                 using (Transaction trans = db.TransactionManager.StartTransaction())
                 {
@@ -517,7 +523,7 @@ namespace Sections
                         ErrorNOStripStatus.Text = "Errors: " + ex.Message;
                     }
                     trans.Commit();
-                }                
+                }
             }
             catch (FormatException)
             {
@@ -586,24 +592,24 @@ namespace Sections
                             break;
                         else
                             idsvg++;
-                    }                                       
+                    }
                     foreach (ObjectId osamID in slg.GetSampleLineIds())
-                    {                       
+                    {
                         osam = trans.GetObject(osamID, OpenMode.ForWrite) as SampleLine;
-                        if (osam.Station==sta)
+                        if (osam.Station == sta)
                         {
                             try
                             {
                                 secvg = trans.GetObject(osam.GetSectionViewIds()[idsvg], OpenMode.ForWrite) as SectionView;
                                 propertyGrid1.SelectedObject = secvg;
-                                
+
                             }
                             catch
                             {
                                 ed.WriteMessage("\n There is no Section View at Station: " + osam.Station.ToString());
                                 continue;
                             }
-                        }              
+                        }
                     }
                 }
                 catch (System.Exception ex)
@@ -613,7 +619,7 @@ namespace Sections
                 }
                 trans.Commit();
             }
-            
+
         }
     }
 }

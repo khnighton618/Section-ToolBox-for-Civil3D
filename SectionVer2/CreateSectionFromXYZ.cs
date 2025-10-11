@@ -30,11 +30,11 @@ namespace Sections
         public double[] minoff2;
         public double[] maxoff2;
         private MenuStrip menuStrip1;
-        public TinSurface surface;        
+        public TinSurface surface;
         public double[] Station2;
         public CreateSectionFromXYZ()
         {
-            InitializeComponent();            
+            InitializeComponent();
             LS_SLG.Items.Clear();
             Editor ed = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Editor;
             CivilDocument civildoc = CivilApplication.ActiveDocument;
@@ -98,7 +98,7 @@ namespace Sections
 
                     align2 = align;
                     alignID2 = alignID;
-                    
+
                     comboBox1.Items.Clear();
                     comboBox1.Items.Add(align.Name);
                     comboBox1.SelectedIndex = 0;
@@ -158,7 +158,7 @@ namespace Sections
                 }
                 trans.Commit();
             }
-        }              
+        }
         public void CreateSurf(DataView dvFinal, List<double> Station, CivilDocument civildoc, Database db)
         {
             using (Transaction trans = db.TransactionManager.StartTransaction())
@@ -170,38 +170,44 @@ namespace Sections
                 CogoPointCollection cog = civildoc.CogoPoints;
                 Point3dCollection po3dcol = new Point3dCollection();
                 ObjectId postyle = civildoc.Styles.PointStyles[0];
-                ObjectId groupId = civildoc.PointGroups.Add(align2.Name.ToString() + DateTime.Today.ToShortDateString() + DateTime.Now.ToShortTimeString());              
+                ObjectId groupId = civildoc.PointGroups.Add(align2.Name.ToString() + DateTime.Today.ToShortDateString() + DateTime.Now.ToShortTimeString());
                 PointGroup group = groupId.GetObject(OpenMode.ForWrite) as PointGroup;
                 Point3dCollection po3d2 = new Point3dCollection();
-                ObjectIdCollection pol3dobjcol = new ObjectIdCollection();                
-                string Desc = "";                
+                ObjectIdCollection pol3dobjcol = new ObjectIdCollection();
+                string Desc = "";
                 for (int i = 0; i < dvFinal.Count; i++)
                 {
                     align2.PointLocation((double)(dvFinal[i][3]), (double)(dvFinal[i][4]), ref x, ref y);
-                    
+
                     Point3d po3d = new Point3d(x, y, (double)(dvFinal[i][2]));
                     if (Math.Abs((double)(dvFinal[i][4])) <= 0.0001)
                         Desc = "D = " + dvFinal[i][5].ToString(); //"STA = " + dvFinal[i][3].ToString();
                     else
                         Desc = "D = " + dvFinal[i][5].ToString(); //"STA = " + dvFinal[i][3].ToString() + " Off= " + dvFinal[i][4].ToString();
                     ObjectId pointIds = cog.Add(po3d, Desc, true);
-                    if (maxOff < Math.Abs((double)(dvFinal[i][4]))& Math.Abs((double)(dvFinal[i][4]))<100)
+                    if (maxOff < Math.Abs((double)(dvFinal[i][4])) & Math.Abs((double)(dvFinal[i][4])) < 100)
                         maxOff = Math.Abs((double)(dvFinal[i][4]));
                     //if ((double)(dvFinal[i][2]) == 1264.731)
                     //    continue;
                 }
-                dvFinal.Sort = "OFF ASC";                
+                dvFinal.Sort = "OFF ASC";
                 for (int i = 0; i < Station.Count; i++)
                 {
                     for (int j = 0; j < dvFinal.Count; j++)
                     {
                         if ((double)(dvFinal[j][3]) == Station[i])
                         {
-                            align2.PointLocation((double)(dvFinal[j][3]), (double)(dvFinal[j][4]), ref x, ref y);
+                            if (polyCHK.Checked)
+                            {
+                                x = (double)dvFinal[j][0];
+                                y = (double)dvFinal[j][1];
+                            }
+                            else
+                                align2.PointLocation((double)(dvFinal[j][3]), (double)(dvFinal[j][4]), ref x, ref y);
                             Point3d po3d = new Point3d(x, y, (double)(dvFinal[j][2]));
                             po3d2.Add(po3d);
                         }
-                    }                 
+                    }
                     BlockTable bt = (BlockTable)trans.GetObject(db.BlockTableId, OpenMode.ForRead, false);
                     BlockTableRecord btr = (BlockTableRecord)trans.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite, false);
                     Autodesk.AutoCAD.DatabaseServices.Polyline3d pol3d = new Autodesk.AutoCAD.DatabaseServices.Polyline3d();
@@ -218,17 +224,21 @@ namespace Sections
                     pol3dobjcol.Add(pol3d.ObjectId);
                     po3d2.Clear();
                 }
-                StandardPointGroupQuery query = new StandardPointGroupQuery();
-                query.IncludeRawDescriptions = "D = *";
-                PointGroup groupPO = groupId.GetObject(OpenMode.ForWrite) as PointGroup;
-                groupPO.SetQuery(query);
-                Autodesk.Civil.Settings.SettingsPoint pointSettings = civildoc.Settings.GetSettings<Autodesk.Civil.Settings.SettingsPoint>() as Autodesk.Civil.Settings.SettingsPoint;
+                if (POgroupCHK.Checked)
+                {
+                    StandardPointGroupQuery query = new StandardPointGroupQuery();
+                    query.IncludeRawDescriptions = "D = *";
+                    PointGroup groupPO = groupId.GetObject(OpenMode.ForWrite) as PointGroup;
+                    groupPO.SetQuery(query);
+                    Autodesk.Civil.Settings.SettingsPoint pointSettings = civildoc.Settings.GetSettings<Autodesk.Civil.Settings.SettingsPoint>() as Autodesk.Civil.Settings.SettingsPoint;
+
+                }
                 ObjectId surfaceStyleId = civildoc.Styles.SurfaceStyles[0];
                 ObjectId surfaceId = surfaceStyleId;
-                if ( chksurf.CheckState == CheckState.Checked )
+                if (chksurf.CheckState == CheckState.Checked)
                 {
-                    createsurf(dvFinal, Station, db, pol3dobjcol, surfaceStyleId, ref surfaceId);               
-                }                    
+                    createsurf(dvFinal, Station, db, pol3dobjcol, surfaceStyleId, ref surfaceId);
+                }
 
                 if (checkBox1.CheckState == CheckState.Checked)
                 {
@@ -250,10 +260,30 @@ namespace Sections
                         OFFSET = Math.Floor(maxOff);
                         align2.PointLocation(sta, OFFSET, ref x1, ref y1);
                         align2.PointLocation(sta, -1 * OFFSET, ref x2, ref y2);
-                        Point2d samVert1 = new Point2d(x1, y1);
-                        secpo.Add(samVert1);
-                        Point2d samVert2 = new Point2d(x2, y2);
-                        secpo.Add(samVert2);
+                        if (samplefrompointsCHK.Checked)
+                        {
+                            int s2 = 0;
+                            dvFinal.Sort = "OFF ASC";
+                            for (int i2 = 0; i2 < dvFinal.Count; i2++)
+                            {
+                                s2++;
+                                if ((double)dvFinal[i2][3] == sta)
+                                {
+
+                                    Point2d samVert1 = new Point2d((double)dvFinal[i2][0], (double)dvFinal[i2][1]);
+                                    secpo.Add(samVert1);
+                                }
+                            }
+
+                        }
+                        else
+                        {
+                            Point2d samVert1 = new Point2d(x1, y1);
+                            secpo.Add(samVert1);
+                            Point2d samVert2 = new Point2d(x2, y2);
+                            secpo.Add(samVert2);
+                        }
+
 
                         string v = "SampleLineByPoints-" + Station[i].ToString() + "-" + DateTime.Now.ToShortTimeString();
                         str.Add(v);
@@ -274,13 +304,13 @@ namespace Sections
                         }
                     }
                 }
-                
+
                 trans.Commit();
             }
         }
         public void createsurf(DataView dvFinal, List<double> Station, Database db, ObjectIdCollection pol3dobjcol, ObjectId surfaceStyleId, ref ObjectId surfaceId)
         {
-            surfaceId = TinSurface.Create("Surface - " + align2.Name.ToString(), surfaceStyleId);           
+            surfaceId = TinSurface.Create("Surface - " + align2.Name.ToString(), surfaceStyleId);
             surface = surfaceId.GetObject(OpenMode.ForWrite) as TinSurface;
             surface.Rebuild();
             surface.BreaklinesDefinition.AddStandardBreaklines(pol3dobjcol, 1, 1, 1, 1);
@@ -289,7 +319,8 @@ namespace Sections
             //poly.Layer = db.Clayer;
             ObjectIdCollection boundaryEntities = new ObjectIdCollection();
             boundaryEntities.Add(poly.ObjectId);
-            surface.BoundariesDefinition.AddBoundaries(boundaryEntities, .1, SurfaceBoundaryType.Outer, true);
+            if (BoundaryCHK.Checked)
+                surface.BoundariesDefinition.AddBoundaries(boundaryEntities, .1, SurfaceBoundaryType.Outer, true);
             surface.Rebuild();
         }
         public void boundrypol(DataView dvFinal, List<double> Station, Database db, ref Polyline3d poly)
@@ -340,8 +371,8 @@ namespace Sections
                     PolylineVertex3d vex3d = new PolylineVertex3d(po2);
                     poly.AppendVertex(vex3d);
                     trans.AddNewlyCreatedDBObject(vex3d, true);
-                }               
-                for (int i = po3dcolRight.Count-1; i >-1 ; i--)
+                }
+                for (int i = po3dcolRight.Count - 1; i > -1; i--)
                 {
                     PolylineVertex3d vex3d = new PolylineVertex3d(po3dcolRight[i]);
                     poly.AppendVertex(vex3d);
@@ -363,8 +394,8 @@ namespace Sections
                 //    ltb.Add(newLayer);
                 //    trans.AddNewlyCreatedDBObject(newLayer, true);
                 //}                
-                trans.Commit();         
-            }       
+                trans.Commit();
+            }
         }
         public void datv2(Editor ed, CivilDocument civildoc, Database db,
             ref DataView dvFinal, ref List<double> Station)
@@ -395,6 +426,9 @@ namespace Sections
                 double y = 0;
                 double z = 0;
                 string d = "";
+                double tol = 0;
+                if (Alignment_chkBox.Checked)
+                    tol = Convert.ToDouble(Tol.Text);
                 List<double> df = new List<double>();
                 List<double> tt2 = new List<double>();
                 System.Data.DataTable table = new System.Data.DataTable();
@@ -404,14 +438,14 @@ namespace Sections
                 table.Columns.Add("STA", typeof(double));
                 table.Columns.Add("OFF", typeof(double));
                 table.Columns.Add("Desc", typeof(string));
-                for (int i = 0; i < TextFile.Length - 5; i = i + 5)
+                for (int i = 0; i < TextFile.Length - 5; i = i + 4)
                 {
                     x = Convert.ToDouble(TextFile[i + 1]);
                     y = Convert.ToDouble(TextFile[i + 2]);
                     z = Convert.ToDouble(TextFile[i + 3]);
-                    d = Convert.ToString(TextFile[i + 4]);
+                    d = Convert.ToString(TextFile[i + 0]);
                     ii = TextFile[i + 0];
-                    align2.StationOffset(x, y, ref sta, ref off);
+                    align2.StationOffset(x, y, tol, ref sta, ref off);
                     table.Rows.Add(x, y, z, sta, off, d);
                 }
                 //---------------------------------
@@ -439,16 +473,20 @@ namespace Sections
                 table2.Columns.Add("OFF", typeof(double));
                 table2.Columns.Add("Desc", typeof(string));
                 DataView dv2;
+                double maxSTA = 0;
                 for (int i = 0; i < dv.Count; i++)
                 {
                     x = 0;
                     y = 0;
                     align2.PointLocation(Convert.ToDouble(dv[i][3]), Convert.ToDouble(dv[i][4]), ref x, ref y);
                     table2.Rows.Add(x, y, dv[i][2], dv[i][3], dv[i][4], dv[i][5]);
+                    if ((double)dv[i][3] > maxSTA)
+                        maxSTA = (double)dv[i][3];
                 }
                 dv2 = new DataView(table2);
                 dv2.Sort = "OFF ASC";
                 dvFinal = dv2;
+                slgsta.RemoveRange(slgsta.IndexOf(maxSTA) + 1, slgsta.Count - slgsta.IndexOf(maxSTA) - 1);
                 Station = slgsta;
             }
             catch (System.Exception ex)
@@ -464,7 +502,7 @@ namespace Sections
         {
             try
             {
-                if(Tol.Text==null)
+                if (Tol.Text == null)
                     MessageBox.Show("Tolerance must have a value!", "Tolerance Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                 Station = null;
@@ -474,6 +512,9 @@ namespace Sections
                 double y = 0;
                 double z = 0;
                 string d = "";
+                double tol = 0;
+                if (Alignment_chkBox.Checked)
+                    tol = Convert.ToDouble(Tol.Text);
                 List<double> df = new List<double>();
                 List<double> st = new List<double>();
                 List<double> st2 = new List<double>();
@@ -485,14 +526,14 @@ namespace Sections
                 table.Columns.Add("STA", typeof(double));
                 table.Columns.Add("OFF", typeof(double));
                 table.Columns.Add("Desc", typeof(string));
-                for (int i = 0; i < TextFile.Length - 5; i = i + 5)
+                for (int i = 0; i < TextFile.Length - 5; i = i + 4)
                 {
                     x = Convert.ToDouble(TextFile[i + 1]);
                     y = Convert.ToDouble(TextFile[i + 2]);
                     z = Convert.ToDouble(TextFile[i + 3]);
-                    d = Convert.ToString(TextFile[i + 4]);
+                    d = Convert.ToString(TextFile[i + 0]);
                     ii = TextFile[i + 0];
-                    align2.StationOffset(x, y,.1, ref sta, ref off);
+                    align2.StationOffset(x, y, tol, ref sta, ref off);
                     table.Rows.Add(x, y, z, sta, off, d);
                     st2.Add(sta);
                 }
@@ -504,11 +545,11 @@ namespace Sections
                 sta = (double)dv[0][3];
                 double s = 0;
                 int ind = 1;
-                
+
                 for (int i = 1; i <= dv.Count; i++)
                 {
-                    
-                    if(Math.Abs(sta- st2[i])<= Convert.ToDouble(Tol.Text))
+
+                    if (Math.Abs(sta - st2[i]) <= Convert.ToDouble(Tol.Text))
                     {
                         s = s + st2[i];
                         ind++;
@@ -534,7 +575,7 @@ namespace Sections
                             ind = 1;
                             s = 0;
                         }
-                        
+
                     }
                     sta = st2[i];
                 }
@@ -546,9 +587,9 @@ namespace Sections
                         dv[i].Row.Delete();
                         st.RemoveAt(i);
                         i--;
-                    }                        
+                    }
                     else
-                        dv[i][3] = st[i];           
+                        dv[i][3] = st[i];
                 }
                 dvFinal = dv;
                 Station = st3;
@@ -586,7 +627,7 @@ namespace Sections
                         FileStream input = new FileStream(filename, FileMode.Open, FileAccess.Read);
                         filereader = new StreamReader(input);
                         string whole_file = filereader.ReadToEnd();
-                        if(chkCHAIN.CheckState == CheckState.Checked)
+                        if (chkCHAIN.CheckState == CheckState.Checked)
                         {
                             string[] inputfields;
                             char[] delim = { '\n', ' ', ' ' };
@@ -606,7 +647,7 @@ namespace Sections
                                     Left[i, 1] = lines[sid + 1];
                                     Left[i, 2] = lines[sid + 2];
                                     sid = sid + 3;
-                                }                                
+                                }
                                 for (int i = 0; i < 30; i++)
                                 {
                                     SectionFromFile_TxtBox.Text += "\r\n" + lines[i].ToString();
@@ -689,7 +730,7 @@ namespace Sections
                                 {
                                     double sta = Convert.ToDouble(Left2[i, 0]);
                                     double off = Convert.ToDouble(Left2[i, 1]);
-                                    double z = Convert.ToDouble(Left2[i, 2]);                                    
+                                    double z = Convert.ToDouble(Left2[i, 2]);
                                     if (sta > align2.EndingStation)
                                     {
                                         MessageBox.Show("Your Text File ending Station is greater than Alignment length", "Text File Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -700,7 +741,7 @@ namespace Sections
                                     tex.Add(x.ToString());
                                     tex.Add(y.ToString());
                                     tex.Add(z.ToString());
-                                    p++;                                  
+                                    p++;
                                 }
                                 TextFile = tex.ToArray();
                                 for (int i = 0; i < 30; i++)
@@ -724,7 +765,7 @@ namespace Sections
                                 SectionFromFile_TxtBox.Text += "\r\n" + TextFile[i].ToString();
                             }
                         }
-                        
+
 
                     }
                     catch (IOException)
@@ -755,7 +796,7 @@ namespace Sections
             List<double> Station = null;
             Editor ed = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Editor;
             CivilDocument civildoc = CivilApplication.ActiveDocument;
-            Database db = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Database;       
+            Database db = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Database;
             ProgBar.Maximum = 100;
             ProgBar.Step = 1;
             ProgBar.Value = 0;
@@ -770,7 +811,7 @@ namespace Sections
                 ErrorNOStripStatus.Text = "Errors: 1";
             }
             else
-                CreateSurf(dvFinal, Station, civildoc, db);            
+                CreateSurf(dvFinal, Station, civildoc, db);
             elaptime.Stop();
             TimeElapseStripStatus.Text = "Elapsed Time: " + elaptime.Elapsed.ToString().Remove(8);
             elaptime.Reset();
@@ -779,12 +820,12 @@ namespace Sections
         {
             DataView dvFinal = null;
             DataView dv = null;
-            List<double> Station = null;          
+            List<double> Station = null;
             Editor ed = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Editor;
             CivilDocument civildoc = CivilApplication.ActiveDocument;
             Database db = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Database;
-            
-            if(surface==null)
+
+            if (surface == null)
                 MessageBox.Show("You must import points and create surface!");
             else
             {
@@ -889,7 +930,7 @@ namespace Sections
                     MessageBox.Show("You must remove sample lines which are outside of surface boundries!" + "\n" + ErrSLG, "Outside sample lines", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
-                       
+
         }
         private void exitToolStripMenuItem_Click_1(object sender, EventArgs e)
         {
@@ -907,6 +948,14 @@ namespace Sections
                 LS_SLG.Enabled = false;
             if (checkBox1.CheckState == CheckState.Unchecked)
                 LS_SLG.Enabled = true;
+        }
+
+        private void Alignment_chkBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (Alignment_chkBox.Checked)
+                Tol.Enabled = true;
+            else
+                Tol.Enabled = false;
         }
     }
 }

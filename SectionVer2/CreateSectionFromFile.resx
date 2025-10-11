@@ -120,29 +120,7 @@
   <metadata name="menuStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="Select_Alignment_BTN.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABkAAAAVCAYAAACzK0UYAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
-        wQAADsEBuJFr7QAAAspJREFUSEu11f9PEnEcx3H/q/oLwtWcq7m+OGuutZqos1k/1mpzFH5DvirynfyS
-        qCAqgsQXBVRI/IbfMEABwcMUFwP8+dUdLRfCIbX84bHb7Xbv5+dzd9tVZLPZhUwmE74u5HxnRTqdjpyf
-        n+O6kKED2kgmm4E36IHMLoDExrvSoFMO4pQonEMXSaVTsG6aIHG0w7CrwIxfScuwq4Ta04263iqsBbx5
-        cyhFI8kfp9B9HYbKzYE7PomVhJGWl5jBhE+KFvUTMFg3sez35AUoBZH4ySFk5NZV7k7MH2jgiowV8CXm
-        4YstwBObwsiqEA2yB3jIZeAW68bVEfIrgNLWhyZVNTqNDSRmURNuOdg93dA51OiZfYNaPgO1PAYYH8qI
-        kEfwptlgqu6gTV9P67NDCDaHC8OsGaJxHhplj1AnYKDybyJN6iqwJp/SGnGK0MEVwrcdhGXOCcEwD62q
-        etxml/FOfkXa0ayuxsepZ7Q0rl508UXY9u9jLxjF0vIqJCMSvFYysRnaKC/S8uku2qdf0Bp1icER9OJb
-        KIpQOI79yBE2tvwY0mmwtbNdXuTlwD10zpAvnsbYQj+4IjHCUQKH8e85saMTBEIRGGet2Nndy31EJSOt
-        gzXoNjbS0i5Kwe+TgEicgDg+ReggCoPJColiAFLSuzY21tZ9pSOvhu6DY2qmpVuSQdgvRYIMmMw2CMVy
-        mK0OdHTxYLPPYXHJjXAkcrGbvAh5ApVFgseCSjzvry6KKa+BwixARw8fkwYTxrR6KFQD+GKdx5BGi/WN
-        zdwc2sdFXYjEwnB452BzW4qye6ywu+x4+54Fi8VG7uYYgUAQYqkSK2s+DA6PIplMXgQKIr9D1EpKoYYE
-        gkGcnZ3l7kmlUjBbrNDpDdBOTGPZu1o6Uq4/HwfliCCgnzJgXKdHLBbPu/bPkcuoKLUzyuUF/LdIKbkI
-        Wb7mf3zW+RM1nP1BaW2nUwAAAABJRU5ErkJggg==
-</value>
-  </data>
   <metadata name="statusStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>369, 20</value>
-  </metadata>
-  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>50</value>
+    <value>132, 17</value>
   </metadata>
 </root>

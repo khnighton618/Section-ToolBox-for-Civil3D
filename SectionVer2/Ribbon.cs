@@ -14,7 +14,8 @@ using Autodesk.Civil;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Runtime;
 //using Autodesk.AutoCAD.Customization;
-
+using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Customization;
 using Autodesk.Windows;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 using System.Windows.Media.Imaging;
@@ -141,7 +142,7 @@ namespace SectionToolBox
             public event EventHandler CanExecuteChanged;
             public void Execute(object parameter)
             {
-                Document doc = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
+                Autodesk.AutoCAD.ApplicationServices.Document doc = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
                 
                 if (parameter is RibbonButton)
                 {

@@ -16,7 +16,7 @@ namespace Sections
     public partial class CreateSectionFromFile : Form
     {
         Stopwatch elaptime = new Stopwatch();
-        private StreamReader filereader;       
+        private StreamReader filereader;
         public string[,] Left2;
         public string[,] Left3;
         public Alignment align2;
@@ -57,7 +57,7 @@ namespace Sections
                 }
                 trans.Commit();
             }
-            
+
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -98,15 +98,15 @@ namespace Sections
                         string[] lines = whole_file.Split(new char[] { '\r', ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
                         // See how many rows and columns there are.
                         int num_rows = lines.Length;
-                        if(lines[0].Contains("chainage")==false)
+                        if (lines[0].Contains("chainage") == false)
                         {
                             int sid = 0;
-                            string[,] Left = new string[(lines.Length ) / 3, 3];
-                            for (int i=0; i<lines.Length/3;i++)
+                            string[,] Left = new string[(lines.Length) / 3, 3];
+                            for (int i = 0; i < lines.Length / 3; i++)
                             {
                                 Left[i, 0] = lines[sid];
-                                Left[i, 1] = lines[sid+1];
-                                Left[i, 2] = lines[sid+2];
+                                Left[i, 1] = lines[sid + 1];
+                                Left[i, 2] = lines[sid + 2];
                                 sid = sid + 3;
                             }
                             Left3 = Left;
@@ -186,7 +186,7 @@ namespace Sections
                             {
                                 SectionFromFile_TxtBox.Text += "\r\n" + lines[i].ToString();
                             }
-                        }               
+                        }
                     }
                     catch (IOException)
                     {
@@ -202,10 +202,10 @@ namespace Sections
         }
 
         private void selalgbtn_Click(object sender, EventArgs e)
-        {            
+        {
             Editor ed = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Editor;
             CivilDocument civildoc = CivilApplication.ActiveDocument;
-            Database db = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Database;                     
+            Database db = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Database;
             using (Transaction trans = db.TransactionManager.StartTransaction())
             {
                 try
@@ -217,7 +217,7 @@ namespace Sections
                     Alignment align = trans.GetObject(alignID, OpenMode.ForRead) as Alignment;
                     align2 = align;
                     alignID2 = alignID;
-                    comboBox1.Items.Clear();   
+                    comboBox1.Items.Clear();
                     comboBox1.Items.Add(align.Name);
                     comboBox1.SelectedIndex = 0;
                 }
@@ -226,14 +226,14 @@ namespace Sections
                     ed.WriteMessage(ex.Message);
                 }
                 trans.Commit();
-            }  
+            }
         }
         private void createsectionBtn_Click(object sender, EventArgs e)
         {
             elaptime.Start();
             TimeElapseStripStatus.Text = "Elapsed Time: 00:00:00 ";
             ProgBar.Value = 0;
-            ErrorNOStripStatus.Text = "Errors: 0";            
+            ErrorNOStripStatus.Text = "Errors: 0";
             ProgBar.Maximum = 100;
             ProgBar.Step = 1;
             ProgBar.Value = 0;
@@ -244,7 +244,7 @@ namespace Sections
             }
             Editor ed = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Editor;// Application.DocumentManager.MdiActiveDocument.Editor;
             CivilDocument civildoc = CivilApplication.ActiveDocument;
-            Database db = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Database;            
+            Database db = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Database;
             using (Transaction trans = db.TransactionManager.StartTransaction())
             {
                 try
@@ -260,11 +260,11 @@ namespace Sections
                     tb.Columns.Add("Z", typeof(double));
                     tb.Columns.Add("STA", typeof(double));
                     tb.Columns.Add("OFF", typeof(double));
-                    
-                    CogoPointCollection cog = civildoc.CogoPoints;                    
+
+                    CogoPointCollection cog = civildoc.CogoPoints;
                     ObjectId postyle = civildoc.Styles.PointStyles[0];
                     int errtext = 0;
-                    foreach(ObjectId id in civildoc.PointGroups)
+                    foreach (ObjectId id in civildoc.PointGroups)
                     {
                         PointGroup pogrp = (PointGroup)trans.GetObject(id, OpenMode.ForRead);
                         if (pogrp.Name == Point_Group_TxtBox.Text.ToString() + "-" + align2.Name.ToString())
@@ -273,14 +273,14 @@ namespace Sections
                             errtext = 1;
                         }
                     }
-                    ObjectId groupId ;
-                    if (errtext==0)
+                    ObjectId groupId;
+                    if (errtext == 0)
                     {
-                        
-                            groupId = civildoc.PointGroups.Add(Point_Group_TxtBox.Text.ToString() + "-" + align2.Name.ToString());
-                            PointGroup group = groupId.GetObject(OpenMode.ForWrite) as PointGroup;
-                        
-                        
+
+                        groupId = civildoc.PointGroups.Add(Point_Group_TxtBox.Text.ToString() + "-" + align2.Name.ToString());
+                        PointGroup group = groupId.GetObject(OpenMode.ForWrite) as PointGroup;
+
+
                         if (Left2 == null) Left2 = Left3;
                         double x = 0;
                         double y = 0;
@@ -310,7 +310,7 @@ namespace Sections
                             }
                         }
                         DataView dv = new DataView(tb);
-                        
+
                         if (chkpo.Checked == true)
                         {
                             StandardPointGroupQuery query = new StandardPointGroupQuery();
@@ -391,14 +391,14 @@ namespace Sections
                         }
                         surface.BreaklinesDefinition.AddStandardBreaklines(pol3dobjcol, 0.001, .5, .5, .5);
                         surface.Rebuild();
-                        Autodesk.AutoCAD.DatabaseServices.Polyline3d poly = null;                        
+                        Autodesk.AutoCAD.DatabaseServices.Polyline3d poly = null;
                         boundrypol(dv, STA, db, ref poly);
                         //poly.Layer = db.Clayer;
                         ObjectIdCollection boundaryEntities = new ObjectIdCollection();
                         boundaryEntities.Add(poly.ObjectId);
                         surface.BoundariesDefinition.AddBoundaries(boundaryEntities, .1, Autodesk.Civil.SurfaceBoundaryType.Outer, true);
                         surface.Rebuild();
-                        if(chkSLG.Checked==true)
+                        if (chkSLG.Checked == true)
                         {
                             ObjectId slgId = SampleLineGroup.Create("Section SampleLine" + "-" + Point_Group_TxtBox.Text.ToString(), alignID2);
                             SampleLineGroup slg = trans.GetObject(slgId, OpenMode.ForWrite) as SampleLineGroup;
@@ -435,10 +435,10 @@ namespace Sections
                                 }
                             }
                         }
-                        
+
                         ProgBar.Value = 100;
                         surface.Rebuild();
-                    }                       
+                    }
                 }
                 catch (System.Exception ex)
                 {
@@ -511,7 +511,7 @@ namespace Sections
                 poly.AppendVertex(vex3d2);
                 trans.AddNewlyCreatedDBObject(vex3d2, true);
                 poly.Closed = true;
-                             
+
                 trans.Commit();
             }
         }
@@ -526,11 +526,11 @@ namespace Sections
             {
                 try
                 {
-                    for (int i=0;i<civildoc.GetAlignmentIds().Count;i++)
+                    for (int i = 0; i < civildoc.GetAlignmentIds().Count; i++)
                     {
                         ObjectId alIDs = civildoc.GetAlignmentIds()[index];
                         Alignment Align = trans.GetObject(alIDs, OpenMode.ForRead) as Alignment;
-                        if (Align.Name==alname)
+                        if (Align.Name == alname)
                         {
                             align2 = Align;
                             alignID2 = alIDs;

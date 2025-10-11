@@ -39,37 +39,53 @@
     </ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="accoremgd, Version=23.1.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\Debug\accoremgd.dll</HintPath>
+    <Reference Include="accoremgd">
+      <HintPath>..\..\..\..\..\Documents\Drive\My Drive\C#\SectionVer2\SectionVer2\bin\Release\accoremgd.dll</HintPath>
     </Reference>
     <Reference Include="AcCui">
-      <HintPath>C:\Program Files\Autodesk\AutoCAD 2022\AcCui.dll</HintPath>
+      <HintPath>..\..\..\..\..\Documents\Drive\My Drive\C#\SectionVer2\SectionVer2\bin\Release\AcCui.dll</HintPath>
     </Reference>
-    <Reference Include="acdbmgd, Version=23.1.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\Debug\acdbmgd.dll</HintPath>
+    <Reference Include="AcCustomize">
+      <HintPath>..\..\..\..\..\Documents\Drive\My Drive\C#\SectionVer2\SectionVer2\bin\Release\AcCustomize.dll</HintPath>
     </Reference>
-    <Reference Include="acmgd, Version=23.1.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\Debug\acmgd.dll</HintPath>
+    <Reference Include="acdbmgd">
+      <HintPath>..\..\..\..\..\Documents\Drive\My Drive\C#\SectionVer2\SectionVer2\bin\Release\acdbmgd.dll</HintPath>
+    </Reference>
+    <Reference Include="AcDx">
+      <HintPath>..\..\..\..\..\Documents\Drive\My Drive\C#\SectionVer2\SectionVer2\bin\Release\AcDx.dll</HintPath>
+    </Reference>
+    <Reference Include="AcDxPublishUi">
+      <HintPath>..\..\..\..\..\Documents\Drive\My Drive\C#\SectionVer2\SectionVer2\bin\Release\AcDxPublishUi.dll</HintPath>
+    </Reference>
+    <Reference Include="acmgd">
+      <HintPath>..\..\..\..\..\Documents\Drive\My Drive\C#\SectionVer2\SectionVer2\bin\Release\acmgd.dll</HintPath>
+    </Reference>
+    <Reference Include="AcMNUParser">
+      <HintPath>..\..\..\..\..\Documents\Drive\My Drive\C#\SectionVer2\SectionVer2\bin\Release\AcMNUParser.dll</HintPath>
+    </Reference>
+    <Reference Include="AcMr">
+      <HintPath>..\..\..\..\..\Documents\Drive\My Drive\C#\SectionVer2\SectionVer2\bin\Release\AcMr.dll</HintPath>
+    </Reference>
+    <Reference Include="AcTcMgd">
+      <HintPath>..\..\..\..\..\Documents\Drive\My Drive\C#\SectionVer2\SectionVer2\bin\Release\AcTcMgd.dll</HintPath>
     </Reference>
     <Reference Include="AcWindows">
-      <HintPath>C:\Program Files\Autodesk\AutoCAD 2023\AcWindows.dll</HintPath>
+      <HintPath>..\..\..\..\..\Documents\Drive\My Drive\C#\SectionVer2\SectionVer2\bin\Release\AcWindows.dll</HintPath>
     </Reference>
     <Reference Include="AdUIMgd">
-      <HintPath>C:\Program Files\Autodesk\AutoCAD 2022\AdUIMgd.dll</HintPath>
+      <HintPath>..\..\..\..\..\Documents\Drive\My Drive\C#\SectionVer2\SectionVer2\bin\Release\AdUIMgd.dll</HintPath>
+    </Reference>
+    <Reference Include="AdUiPalettes">
+      <HintPath>..\..\..\..\..\Documents\Drive\My Drive\C#\SectionVer2\SectionVer2\bin\Release\AdUiPalettes.dll</HintPath>
     </Reference>
     <Reference Include="AdWindows">
-      <HintPath>C:\Program Files\Autodesk\AutoCAD 2022\AdWindows.dll</HintPath>
+      <HintPath>..\..\..\..\..\Documents\Drive\My Drive\C#\SectionVer2\SectionVer2\bin\Release\AdWindows.dll</HintPath>
     </Reference>
-    <Reference Include="AecBaseMgd, Version=8.2.47.0, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\Debug\AecBaseMgd.dll</HintPath>
+    <Reference Include="AecBaseMgd">
+      <HintPath>..\..\..\..\..\Documents\Drive\My Drive\C#\SectionVer2\SectionVer2\bin\Release\AecBaseMgd.dll</HintPath>
     </Reference>
-    <Reference Include="AeccDbMgd, Version=13.2.1378.0, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\Debug\AeccDbMgd.dll</HintPath>
+    <Reference Include="AeccDbMgd">
+      <HintPath>..\..\..\..\..\Documents\Drive\My Drive\C#\SectionVer2\SectionVer2\bin\Release\AeccDbMgd.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="PresentationCore" />
@@ -127,11 +143,24 @@
     <Compile Include="About-Forms\About_Stripping_Length.designer.cs">
       <DependentUpon>About_Stripping_Length.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alignment_Profile_Corridor Creation.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alignment_Profile_Corridor Creation.Designer.cs">
+      <DependentUpon>Alignment_Profile_Corridor Creation.cs</DependentUpon>
+    </Compile>
     <Compile Include="AutocadSection2Civil.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="AutocadSection2Civil.Designer.cs">
       <DependentUpon>AutocadSection2Civil.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Create_Corridor_Surface.cs" />
+    <Compile Include="Flow Path.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Flow Path.Designer.cs">
+      <DependentUpon>Flow Path.cs</DependentUpon>
     </Compile>
     <Compile Include="Other App\BatchPlot\BatchPlot.cs" />
     <Compile Include="Other App\BatchPlot\Batch_Plot.cs">
@@ -253,6 +282,9 @@
     <EmbeddedResource Include="About-Forms\About_Stripping_Length.resx">
       <DependentUpon>About_Stripping_Length.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alignment_Profile_Corridor Creation.resx">
+      <DependentUpon>Alignment_Profile_Corridor Creation.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="AutocadSection2Civil.resx">
       <DependentUpon>AutocadSection2Civil.cs</DependentUpon>
     </EmbeddedResource>
@@ -279,6 +311,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ExportSection2Chainage.resx">
       <DependentUpon>ExportSection2Chainage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Flow Path.resx">
+      <DependentUpon>Flow Path.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Other App\BatchPlot\Batch_Plot.resx">
       <DependentUpon>Batch_Plot.cs</DependentUpon>
